@@ -20,7 +20,7 @@ from data_exploration import explore
 
 
 # temp = pd.read_csv('./data/titanic.csv')
-temp = pd.read_csv("/home/hung/Data/fxsb/USDxxx/GBPUSD/GBPUSD_240.csv")
+temp = pd.read_csv("data/GBPUSD/GBPUSD_240.csv")
 temp.head()
 
 
@@ -31,7 +31,7 @@ temp.info()
 
 
 use_cols = ['time', 'close', 'volume']
-data = pd.read_csv('/home/hung/Data/fxsb/USDxxx/GBPUSD/GBPUSD_240.csv', usecols=use_cols, parse_dates=['time'])
+data = pd.read_csv('data/GBPUSD/GBPUSD_240.csv', usecols=use_cols, parse_dates=['time'])
 
 
 data['change'] = data['close'].pct_change()*100
