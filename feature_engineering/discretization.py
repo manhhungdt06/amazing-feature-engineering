@@ -1,264 +1,162 @@
 import pandas as pd
+import numpy as np
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import cross_val_score
-import numpy as np
-# from warnings import warn
+from sklearn.preprocessing import KBinsDiscretizer
+from sklearn.base import BaseEstimator, TransformerMixin
+import warnings
 
-
-class ChiMerge:
-    def __init__(self, col=None, bins=None, confidenceVal=3.841, num_of_bins=10):
-        self.col = col
-        self._dim = None
-        self.confidenceVal = confidenceVal
-        self.bins = bins
-        self.num_of_bins = num_of_bins
-
-    def fit(self, X, y):
-        self._dim = X.shape[1]
-        _, bins = self.chimerge(X, y)
-        self.bins = bins
+class UniformDiscretizer(BaseEstimator, TransformerMixin):
+    def __init__(self, n_bins=5, strategy='uniform'):
+        self.n_bins = n_bins
+        self.strategy = strategy
+        self.discretizers_ = {}
+        
+    def fit(self, X, y=None):
+        numeric_cols = X.select_dtypes(include=[np.number]).columns
+        for col in numeric_cols:
+            discretizer = KBinsDiscretizer(n_bins=self.n_bins, encode='ordinal', strategy=self.strategy)
+            discretizer.fit(X[[col]])
+            self.discretizers_[col] = discretizer
         return self
-
+    
     def transform(self, X):
-        if self._dim is None:
-            raise ValueError(
-                'Must train encoder before it can be used to transform data.')
-        if X.shape[1] != self._dim:
-            raise ValueError(
-                f'Unexpected input dimension {X.shape[1]}, expected {self._dim}')
-        X, _ = self.chimerge(X)
-        return X
+        X_transformed = X.copy()
+        for col, discretizer in self.discretizers_.items():
+            if col in X_transformed.columns:
+                X_transformed[f"{col}_{self.strategy}"] = discretizer.transform(X_transformed[[col]]).flatten()
+        return X_transformed
 
-    def chimerge(self, X_in, y=None):
-        X = X_in.copy()
-        if self.bins is not None:
-            X[self.col + '_chimerge'] = pd.cut(X[self.col],
-                                               bins=self.bins, include_lowest=True)
-        else:
-            total_num = X.groupby([self.col])[y].count()
-            positive_class = X.groupby([self.col])[y].sum()
-            regroup = pd.merge(total_num, positive_class,
-                               left_index=True, right_index=True)
-            regroup['negative_class'] = regroup[0] - regroup[1]
-            np_regroup = regroup.to_numpy()
-            i = 0
-            while i <= np_regroup.shape[0] - 2:
-                if (np_regroup[i, 1] == 0 and np_regroup[i + 1, 1] == 0) or (np_regroup[i, 2] == 0 and np_regroup[i + 1, 2] == 0):
-                    np_regroup[i, 1] += np_regroup[i + 1, 1]
-                    np_regroup[i, 2] += np_regroup[i + 1, 2]
-                    np_regroup[i, 0] = np_regroup[i + 1, 0]
-                    np_regroup = np.delete(np_regroup, i + 1, 0)
-                    i -= 1
-                i += 1
-            chi_table = np.array([(np_regroup[i, 1] * np_regroup[i + 1, 2] - np_regroup[i, 2] * np_regroup[i + 1, 1]) ** 2 *
-                                  (np_regroup[i, 1] + np_regroup[i, 2] + np_regroup[i + 1, 1] + np_regroup[i + 1, 2]) /
-                                  ((np_regroup[i, 1] + np_regroup[i, 2]) * (np_regroup[i + 1, 1] + np_regroup[i + 1, 2]) *
-                                   (np_regroup[i, 1] + np_regroup[i + 1, 1]) * (np_regroup[i, 2] + np_regroup[i + 1, 2]))
-                                  for i in range(np_regroup.shape[0] - 1)])
-            while True:
-                if len(chi_table) <= (self.num_of_bins - 1) and min(chi_table) >= self.confidenceVal:
-                    break
-                chi_min_index = np.argmin(chi_table)
-                np_regroup[chi_min_index,
-                           1] += np_regroup[chi_min_index + 1, 1]
-                np_regroup[chi_min_index,
-                           2] += np_regroup[chi_min_index + 1, 2]
-                np_regroup[chi_min_index, 0] = np_regroup[chi_min_index + 1, 0]
-                np_regroup = np.delete(np_regroup, chi_min_index + 1, 0)
-                chi_table = np.delete(chi_table, chi_min_index)
-                if chi_min_index > 0:
-                    chi_table[chi_min_index - 1] = (np_regroup[chi_min_index - 1, 1] * np_regroup[chi_min_index, 2] - np_regroup[chi_min_index - 1, 2] * np_regroup[chi_min_index, 1]) ** 2 / \
-                        ((np_regroup[chi_min_index - 1, 1] + np_regroup[chi_min_index - 1, 2]) * (np_regroup[chi_min_index, 1] + np_regroup[chi_min_index, 2]) *
-                         (np_regroup[chi_min_index - 1, 1] + np_regroup[chi_min_index, 1]) * (np_regroup[chi_min_index - 1, 2] + np_regroup[chi_min_index, 2]))
-                if chi_min_index < np_regroup.shape[0] - 1:
-                    chi_table[chi_min_index] = (np_regroup[chi_min_index, 1] * np_regroup[chi_min_index + 1, 2] - np_regroup[chi_min_index, 2] * np_regroup[chi_min_index + 1, 1]) ** 2 / \
-                        ((np_regroup[chi_min_index, 1] + np_regroup[chi_min_index, 2]) * (np_regroup[chi_min_index + 1, 1] + np_regroup[chi_min_index + 1, 2]) *
-                         (np_regroup[chi_min_index, 1] + np_regroup[chi_min_index + 1, 1]) * (np_regroup[chi_min_index, 2] + np_regroup[chi_min_index + 1, 2]))
-            result_data = pd.DataFrame(
-                {'variable': [self.col] * np_regroup.shape[0]})
-            result_data['interval'] = [
-                f"{'-inf' if i == 0 else np_regroup[i - 1, 0]},{np_regroup[i, 0] if i < np_regroup.shape[0] - 1 else '+'}" for i in range(np_regroup.shape[0])]
-            result_data['flag_0'] = np_regroup[:, 2]
-            result_data['flag_1'] = np_regroup[:, 1]
-            self.bins = sorted(X[self.col].min() - 0.1)
-            return X, self.bins
-
-
-class ChiMergeTodo():
-
-    def __init__(self, col=None, bins=None, confidenceVal=3.841, num_of_bins=10, min_samples_per_bin=5):
-        self.col = col
-        self._dim = None
-        self.confidenceVal = confidenceVal
-        self.bins = bins
-        self.num_of_bins = num_of_bins
-        self.min_samples_per_bin = min_samples_per_bin
-
-    def fit(self, X, y, **kwargs):
-        self._dim = X.shape[1]
-        _, bins = self.chimerge(X_in=X, y=y)
-        self.bins = bins
-        return self
-
-    def transform(self, X):
-        if self._dim is None:
-            raise ValueError(
-                'Must train encoder before it can be used to transform data.')
-        if X.shape[1] != self._dim:
-            raise ValueError('Unexpected input dimension %d, expected %d' % (
-                X.shape[1], self._dim,))
-        X, _ = self.chimerge(X_in=X, bins=self.bins)
-        return X
-
-    def chimerge(self, X_in, y=None, bins=None):
-        X = X_in.copy(deep=True)
-        if bins is not None:
-            try:
-                X[self.col +
-                    '_chimerge'] = pd.cut(X[self.col], bins=bins, include_lowest=True)
-            except Exception as e:
-                print(e)
-        else:
-            try:
-                total_num = X.groupby([self.col])[y].count()
-                positive_class = X.groupby([self.col])[y].sum()
-                regroup = pd.merge(total_num, positive_class,
-                                   left_index=True, right_index=True, how='inner')
-                regroup.reset_index(inplace=True)
-                regroup['negative_class'] = regroup['total_num'] - \
-                    regroup['positive_class']
-                regroup = regroup.drop('total_num', axis=1)
-                np_regroup = np.array(regroup)
-
-                i = 0
-                while (i <= np_regroup.shape[0] - 2):
-                    if ((np_regroup[i, 1] == 0 and np_regroup[i + 1, 1] == 0) or (np_regroup[i, 2] == 0 and np_regroup[i + 1, 2] == 0)):
-                        np_regroup[i, 1] += np_regroup[i + 1, 1]
-                        np_regroup[i, 2] += np_regroup[i + 1, 2]
-                        np_regroup[i, 0] = np_regroup[i + 1, 0]
-                        np_regroup = np.delete(np_regroup, i + 1, 0)
-                        i -= 1
-                    i += 1
-
-                chi_table = np.array([])
-                for i in np.arange(np_regroup.shape[0] - 1):
-                    chi = (np_regroup[i, 1] * np_regroup[i + 1, 2] - np_regroup[i, 2] * np_regroup[i + 1, 1]) ** 2 \
-                        * (np_regroup[i, 1] + np_regroup[i, 2] + np_regroup[i + 1, 1] + np_regroup[i + 1, 2]) / \
-                        ((np_regroup[i, 1] + np_regroup[i, 2]) * (np_regroup[i + 1, 1] + np_regroup[i + 1, 2]) * (
-                            np_regroup[i, 1] + np_regroup[i + 1, 1]) * (np_regroup[i, 2] + np_regroup[i + 1, 2]))
-                    chi_table = np.append(chi_table, chi)
-
-                while (1):
-                    if (len(chi_table) <= (self.num_of_bins - 1) and min(chi_table) >= self.confidenceVal):
-                        break
-                    chi_min_index = np.argwhere(chi_table == min(chi_table))[0]
-
-                    if np_regroup[chi_min_index, 1] + np_regroup[chi_min_index + 1, 1] >= self.min_samples_per_bin or \
-                            np_regroup[chi_min_index, 2] + np_regroup[chi_min_index + 1, 2] >= self.min_samples_per_bin:
-
-                        np_regroup[chi_min_index,
-                                   1] += np_regroup[chi_min_index + 1, 1]
-                        np_regroup[chi_min_index,
-                                   2] += np_regroup[chi_min_index + 1, 2]
-                        np_regroup[chi_min_index,
-                                   0] = np_regroup[chi_min_index + 1, 0]
-                        np_regroup = np.delete(
-                            np_regroup, chi_min_index + 1, 0)
-
-                    if (chi_min_index == np_regroup.shape[0] - 1):
-                        chi_table[chi_min_index - 1] = (np_regroup[chi_min_index - 1, 1] * np_regroup[chi_min_index, 2] - np_regroup[chi_min_index - 1, 2] * np_regroup[chi_min_index, 1]) ** 2 \
-                            * (np_regroup[chi_min_index - 1, 1] + np_regroup[chi_min_index - 1, 2] + np_regroup[chi_min_index, 1] + np_regroup[chi_min_index, 2]) / \
-                            ((np_regroup[chi_min_index - 1, 1] + np_regroup[chi_min_index - 1, 2]) * (np_regroup[chi_min_index, 1] + np_regroup[chi_min_index, 2]) * (
-                                np_regroup[chi_min_index - 1, 1] + np_regroup[chi_min_index, 1]) * (np_regroup[chi_min_index - 1, 2] + np_regroup[chi_min_index, 2]))
-                        chi_table = np.delete(chi_table, chi_min_index, axis=0)
-
-                    else:
-                        chi_table[chi_min_index - 1] = (np_regroup[chi_min_index - 1, 1] * np_regroup[chi_min_index, 2] - np_regroup[chi_min_index - 1, 2] * np_regroup[chi_min_index, 1]) ** 2 \
-                            * (np_regroup[chi_min_index - 1, 1] + np_regroup[chi_min_index - 1, 2] + np_regroup[chi_min_index, 1] + np_regroup[chi_min_index, 2]) / \
-                            ((np_regroup[chi_min_index - 1, 1] + np_regroup[chi_min_index - 1, 2]) * (np_regroup[chi_min_index, 1] + np_regroup[chi_min_index, 2]) * (
-                                np_regroup[chi_min_index - 1, 1] + np_regroup[chi_min_index, 1]) * (np_regroup[chi_min_index - 1, 2] + np_regroup[chi_min_index, 2]))
-                        chi_table[chi_min_index] = (np_regroup[chi_min_index, 1] * np_regroup[chi_min_index + 1, 2] - np_regroup[chi_min_index, 2] * np_regroup[chi_min_index + 1, 1]) ** 2 \
-                            * (np_regroup[chi_min_index, 1] + np_regroup[chi_min_index, 2] + np_regroup[chi_min_index + 1, 1] + np_regroup[chi_min_index + 1, 2]) / \
-                            ((np_regroup[chi_min_index, 1] + np_regroup[chi_min_index, 2]) * (np_regroup[chi_min_index + 1, 1] + np_regroup[chi_min_index + 1, 2]) * (
-                                np_regroup[chi_min_index, 1] + np_regroup[chi_min_index + 1, 1]) * (np_regroup[chi_min_index, 2] + np_regroup[chi_min_index + 1, 2]))
-                        chi_table = np.delete(
-                            chi_table, chi_min_index + 1, axis=0)
-
-                result_data = pd.DataFrame()
-                result_data['variable'] = [self.col] * np_regroup.shape[0]
-                bins = []
-                tmp = []
-                for i in np.arange(np_regroup.shape[0]):
-                    if i == 0:
-                        y = '-inf' + ',' + str(np_regroup[i, 0])
-                    elif i == np_regroup.shape[0] - 1:
-                        y = str(np_regroup[i - 1, 0]) + '+'
-                    else:
-                        y = str(np_regroup[i - 1, 0]) + \
-                            ',' + str(np_regroup[i, 0])
-                    bins.append(np_regroup[i - 1, 0])
-                    tmp.append(y)
-
-                bins.append(X[self.col].min() - 0.1)
-                result_data['interval'] = tmp
-                result_data['flag_0'] = np_regroup[:, 2]
-                result_data['flag_1'] = np_regroup[:, 1]
-                bins.sort(reverse=False)
-
-            except Exception as e:
-                print(e)
-
-        return X, bins
-
-
-class DiscretizeByDecisionTree():
-
-    def __init__(self, col=None, max_depth=None, tree_model=None):
-        self.col = col
-        self._dim = None
+class DecisionTreeDiscretizer(BaseEstimator, TransformerMixin):
+    def __init__(self, max_depth=3, min_samples_leaf=50):
         self.max_depth = max_depth
-        self.tree_model = tree_model
-
-    def fit(self, X, y, **kwargs):
-        self._dim = X.shape[1]
-        _, tree = self.discretize(
-            X_in=X, y=y, max_depth=self.max_depth, col=self.col, tree_model=self.tree_model)
-        self.tree_model = tree
-        return self
-
-    def transform(self, X):
-        if self._dim is None:
-            raise ValueError(
-                'Must train encoder before it can be used to transform data.')
-        if X.shape[1] != self._dim:
-            raise ValueError('Unexpected input dimension %d, expected %d' % (
-                X.shape[1], self._dim,))
-        X, _ = self.discretize(X_in=X, col=self.col,
-                               tree_model=self.tree_model)
-        return X
-
-    def discretize(self, X_in, y=None, max_depth=None, tree_model=None, col=None):
-        X = X_in.copy(deep=True)
-        if tree_model is not None:
-            X[col +
-                '_tree_discret'] = tree_model.predict_proba(X[col].to_frame())[:, 1]
-        else:
-            if isinstance(max_depth, int):
-                tree_model = DecisionTreeClassifier(max_depth=max_depth)
-                tree_model.fit(X[col].to_frame(), y)
-            elif len(max_depth) > 1:
-                score_ls, score_std_ls = [], []
-                for tree_depth in max_depth:
-                    tree_model = DecisionTreeClassifier(max_depth=tree_depth)
-                    scores = cross_val_score(
-                        tree_model, X[col].to_frame(), y, cv=3, scoring='roc_auc')
-                    score_ls.append(np.mean(scores))
-                    score_std_ls.append(np.std(scores))
-                temp = pd.DataFrame(
-                    {'depth': max_depth, 'roc_auc_mean': score_ls, 'roc_auc_std': score_std_ls})
-                optimal_depth = temp.loc[temp.roc_auc_mean.idxmax(), 'depth']
-                tree_model = DecisionTreeClassifier(max_depth=optimal_depth)
-                tree_model.fit(X[col].to_frame(), y)
+        self.min_samples_leaf = min_samples_leaf
+        self.trees_ = {}
+        
+    def fit(self, X, y):
+        numeric_cols = X.select_dtypes(include=[np.number]).columns
+        for col in numeric_cols:
+            if isinstance(self.max_depth, list):
+                best_depth = self._optimize_depth(X[[col]], y, self.max_depth)
             else:
-                raise ValueError('max_depth must be an integer or a list')
-        return X, tree_model
+                best_depth = self.max_depth
+                
+            tree = DecisionTreeClassifier(max_depth=best_depth, min_samples_leaf=self.min_samples_leaf, random_state=42)
+            tree.fit(X[[col]], y)
+            self.trees_[col] = tree
+        return self
+    
+    def transform(self, X):
+        X_transformed = X.copy()
+        for col, tree in self.trees_.items():
+            if col in X_transformed.columns:
+                X_transformed[f"{col}_tree_bins"] = tree.apply(X_transformed[[col]])
+        return X_transformed
+    
+    def _optimize_depth(self, X, y, depths):
+        best_score = 0
+        best_depth = depths[0]
+        for depth in depths:
+            tree = DecisionTreeClassifier(max_depth=depth, min_samples_leaf=self.min_samples_leaf, random_state=42)
+            scores = cross_val_score(tree, X, y, cv=3, scoring='roc_auc')
+            mean_score = np.mean(scores)
+            if mean_score > best_score:
+                best_score = mean_score
+                best_depth = depth
+        return best_depth
+
+class ChiMergeDiscretizer(BaseEstimator, TransformerMixin):
+    def __init__(self, max_bins=10, confidence_threshold=3.841, min_samples_per_bin=30):
+        self.max_bins = max_bins
+        self.confidence_threshold = confidence_threshold
+        self.min_samples_per_bin = min_samples_per_bin
+        self.bin_edges_ = {}
+        
+    def fit(self, X, y):
+        numeric_cols = X.select_dtypes(include=[np.number]).columns
+        for col in numeric_cols:
+            try:
+                bins = self._chimerge_binning(X[col], y)
+                self.bin_edges_[col] = bins
+            except Exception as e:
+                warnings.warn(f"ChiMerge failed for column {col}: {e}")
+                self.bin_edges_[col] = np.linspace(X[col].min(), X[col].max(), self.max_bins + 1)
+        return self
+    
+    def transform(self, X):
+        X_transformed = X.copy()
+        for col, bins in self.bin_edges_.items():
+            if col in X_transformed.columns:
+                X_transformed[f"{col}_chimerge"] = pd.cut(X_transformed[col], bins=bins, include_lowest=True, duplicates='drop')
+        return X_transformed
+    
+    def _chimerge_binning(self, feature, target):
+        df = pd.DataFrame({'feature': feature, 'target': target}).dropna()
+        df = df.sort_values('feature').reset_index(drop=True)
+        
+        unique_vals = df['feature'].unique()
+        if len(unique_vals) <= self.max_bins:
+            return np.concatenate([[df['feature'].min() - 0.001], unique_vals, [df['feature'].max() + 0.001]])
+        
+        intervals = []
+        for val in unique_vals:
+            subset = df[df['feature'] == val]
+            pos_count = subset['target'].sum()
+            neg_count = len(subset) - pos_count
+            intervals.append([val, pos_count, neg_count])
+        
+        while len(intervals) > self.max_bins:
+            chi_values = []
+            for i in range(len(intervals) - 1):
+                chi_val = self._calculate_chi_square(intervals[i], intervals[i + 1])
+                chi_values.append((chi_val, i))
+            
+            if not chi_values:
+                break
+                
+            min_chi, min_idx = min(chi_values)
+            if min_chi >= self.confidence_threshold and len(intervals) <= self.max_bins:
+                break
+                
+            intervals[min_idx][1] += intervals[min_idx + 1][1]
+            intervals[min_idx][2] += intervals[min_idx + 1][2]
+            intervals[min_idx][0] = intervals[min_idx + 1][0]
+            intervals.pop(min_idx + 1)
+        
+        bins = [interval[0] for interval in intervals]
+        bins = [df['feature'].min() - 0.001] + bins[1:] + [df['feature'].max() + 0.001]
+        return np.array(sorted(set(bins)))
+    
+    def _calculate_chi_square(self, interval1, interval2):
+        a, b = interval1[1], interval1[2]
+        c, d = interval2[1], interval2[2]
+        
+        if (a + c) == 0 or (b + d) == 0 or (a + b) == 0 or (c + d) == 0:
+            return 0
+            
+        numerator = ((a + b + c + d) * (a * d - b * c) ** 2)
+        denominator = (a + b) * (c + d) * (a + c) * (b + d)
+        
+        return numerator / denominator if denominator > 0 else 0
+
+class OptimalBinning(BaseEstimator, TransformerMixin):
+    def __init__(self, method='uniform', **kwargs):
+        self.method = method
+        self.kwargs = kwargs
+        self.binners_ = {}
+        
+    def fit(self, X, y=None):
+        if self.method == 'uniform':
+            self.binner = UniformDiscretizer(**self.kwargs)
+        elif self.method == 'tree':
+            self.binner = DecisionTreeDiscretizer(**self.kwargs)
+        elif self.method == 'chimerge':
+            self.binner = ChiMergeDiscretizer(**self.kwargs)
+        else:
+            raise ValueError(f"Unknown method: {self.method}")
+            
+        self.binner.fit(X, y)
+        return self
+    
+    def transform(self, X):
+        return self.binner.transform(X)
