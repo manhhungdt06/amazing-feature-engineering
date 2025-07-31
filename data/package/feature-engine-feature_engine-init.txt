@@ -1,0 +1,356 @@
+Directory structure:
+└── feature_engine/
+    ├── __init__.py
+    ├── dataframe_checks.py
+    ├── py.typed
+    ├── tags.py
+    ├── _base_transformers/
+    │   ├── __init__.py
+    │   ├── base_numerical.py
+    │   └── mixins.py
+    ├── _check_init_parameters/
+    │   ├── __init__.py
+    │   ├── check_init_input_params.py
+    │   ├── check_input_dictionary.py
+    │   └── check_variables.py
+    ├── _prediction/
+    │   ├── __init__.py
+    │   ├── base_predictor.py
+    │   ├── target_mean_classifier.py
+    │   └── target_mean_regressor.py
+    ├── creation/
+    │   ├── __init__.py
+    │   ├── base_creation.py
+    │   ├── cyclical_features.py
+    │   ├── decision_tree_features.py
+    │   ├── math_features.py
+    │   └── relative_features.py
+    ├── datasets/
+    │   ├── __init__.py
+    │   └── titanic.py
+    ├── datetime/
+    │   ├── __init__.py
+    │   ├── _datetime_constants.py
+    │   ├── datetime.py
+    │   └── datetime_subtraction.py
+    ├── discretisation/
+    │   ├── __init__.py
+    │   ├── arbitrary.py
+    │   ├── base_discretiser.py
+    │   ├── decision_tree.py
+    │   ├── equal_frequency.py
+    │   ├── equal_width.py
+    │   └── geometric_width.py
+    ├── encoding/
+    │   ├── __init__.py
+    │   ├── _helper_functions.py
+    │   ├── base_encoder.py
+    │   ├── count_frequency.py
+    │   ├── decision_tree.py
+    │   ├── mean_encoding.py
+    │   ├── one_hot.py
+    │   ├── ordinal.py
+    │   ├── rare_label.py
+    │   ├── similarity_encoder.py
+    │   └── woe.py
+    ├── imputation/
+    │   ├── __init__.py
+    │   ├── arbitrary_number.py
+    │   ├── base_imputer.py
+    │   ├── categorical.py
+    │   ├── drop_missing_data.py
+    │   ├── end_tail.py
+    │   ├── mean_median.py
+    │   ├── missing_indicator.py
+    │   └── random_sample.py
+    ├── outliers/
+    │   ├── __init__.py
+    │   ├── artbitrary.py
+    │   ├── base_outlier.py
+    │   ├── trimmer.py
+    │   └── winsorizer.py
+    ├── pipeline/
+    │   ├── __init__.py
+    │   └── pipeline.py
+    ├── preprocessing/
+    │   ├── __init__.py
+    │   ├── match_categories.py
+    │   └── match_columns.py
+    ├── scaling/
+    │   ├── __init__.py
+    │   └── mean_normalization.py
+    ├── selection/
+    │   ├── __init__.py
+    │   ├── _selection_constants.py
+    │   ├── base_recursive_selector.py
+    │   ├── base_selection_functions.py
+    │   ├── base_selector.py
+    │   ├── drop_constant_features.py
+    │   ├── drop_correlated_features.py
+    │   ├── drop_duplicate_features.py
+    │   ├── drop_features.py
+    │   ├── drop_psi_features.py
+    │   ├── information_value.py
+    │   ├── mrmr.py
+    │   ├── probe_feature_selection.py
+    │   ├── recursive_feature_addition.py
+    │   ├── recursive_feature_elimination.py
+    │   ├── shuffle_features.py
+    │   ├── single_feature_performance.py
+    │   ├── smart_correlation_selection.py
+    │   └── target_mean_selection.py
+    ├── timeseries/
+    │   ├── __init__.py
+    │   └── forecasting/
+    │       ├── __init__.py
+    │       ├── base_forecast_transformers.py
+    │       ├── expanding_window_features.py
+    │       ├── lag_features.py
+    │       └── window_features.py
+    ├── transformation/
+    │   ├── __init__.py
+    │   ├── arcsin.py
+    │   ├── boxcox.py
+    │   ├── log.py
+    │   ├── power.py
+    │   ├── reciprocal.py
+    │   └── yeojohnson.py
+    ├── variable_handling/
+    │   ├── __init__.py
+    │   ├── _variable_type_checks.py
+    │   ├── check_variables.py
+    │   ├── dtypes.py
+    │   ├── find_variables.py
+    │   └── retain_variables.py
+    └── wrappers/
+        ├── __init__.py
+        └── wrappers.py
+
+
+================================================
+FILE: feature_engine/creation/__init__.py
+================================================
+from .cyclical_features import CyclicalFeatures
+from .decision_tree_features import DecisionTreeFeatures
+from .math_features import MathFeatures
+from .relative_features import RelativeFeatures
+
+__all__ = [
+    "DecisionTreeFeatures",
+    "MathFeatures",
+    "RelativeFeatures",
+    "CyclicalFeatures",
+]
+
+================================================
+FILE: feature_engine/datetime/__init__.py
+================================================
+"The module datetime computes features from dates and times."
+
+from .datetime import DatetimeFeatures
+from .datetime_subtraction import DatetimeSubtraction
+
+__all__ = ["DatetimeFeatures", "DatetimeSubtraction"]
+
+
+================================================
+FILE: feature_engine/discretisation/__init__.py
+================================================
+
+from .arbitrary import ArbitraryDiscretiser
+from .decision_tree import DecisionTreeDiscretiser
+from .equal_frequency import EqualFrequencyDiscretiser
+from .equal_width import EqualWidthDiscretiser
+from .geometric_width import GeometricWidthDiscretiser
+
+__all__ = [
+    "DecisionTreeDiscretiser",
+    "EqualFrequencyDiscretiser",
+    "EqualWidthDiscretiser",
+    "ArbitraryDiscretiser",
+    "GeometricWidthDiscretiser",
+]
+
+
+================================================
+FILE: feature_engine/encoding/__init__.py
+================================================
+
+from .count_frequency import CountFrequencyEncoder
+from .decision_tree import DecisionTreeEncoder
+from .mean_encoding import MeanEncoder
+from .one_hot import OneHotEncoder
+from .ordinal import OrdinalEncoder
+from .rare_label import RareLabelEncoder
+from .similarity_encoder import StringSimilarityEncoder
+from .woe import WoEEncoder
+
+__all__ = [
+    "CountFrequencyEncoder",
+    "DecisionTreeEncoder",
+    "MeanEncoder",
+    "OneHotEncoder",
+    "OrdinalEncoder",
+    "RareLabelEncoder",
+    "StringSimilarityEncoder",
+    "WoEEncoder",
+]
+
+
+================================================
+FILE: feature_engine/imputation/__init__.py
+================================================
+
+from .arbitrary_number import ArbitraryNumberImputer
+from .categorical import CategoricalImputer
+from .drop_missing_data import DropMissingData
+from .end_tail import EndTailImputer
+from .mean_median import MeanMedianImputer
+from .missing_indicator import AddMissingIndicator
+from .random_sample import RandomSampleImputer
+
+__all__ = [
+    "MeanMedianImputer",
+    "ArbitraryNumberImputer",
+    "CategoricalImputer",
+    "EndTailImputer",
+    "AddMissingIndicator",
+    "RandomSampleImputer",
+    "DropMissingData",
+]
+
+
+================================================
+FILE: feature_engine/outliers/__init__.py
+================================================
+
+from .artbitrary import ArbitraryOutlierCapper
+from .trimmer import OutlierTrimmer
+from .winsorizer import Winsorizer
+
+__all__ = ["Winsorizer", "ArbitraryOutlierCapper", "OutlierTrimmer"]
+
+================================================
+FILE: feature_engine/pipeline/__init__.py
+================================================
+from .pipeline import Pipeline, make_pipeline
+
+__all__ = ["Pipeline", "make_pipeline"]
+
+================================================
+FILE: feature_engine/preprocessing/__init__.py
+================================================
+
+from .match_categories import MatchCategories
+from .match_columns import MatchVariables
+
+__all__ = [
+    "MatchCategories",
+    "MatchVariables",
+]
+
+================================================
+FILE: feature_engine/scaling/__init__.py
+================================================
+
+from .mean_normalization import MeanNormalizationScaler
+
+__all__ = [
+    "MeanNormalizationScaler",
+]
+
+================================================
+FILE: feature_engine/selection/__init__.py
+================================================
+from .drop_constant_features import DropConstantFeatures
+from .drop_correlated_features import DropCorrelatedFeatures
+from .drop_duplicate_features import DropDuplicateFeatures
+from .drop_features import DropFeatures
+from .drop_psi_features import DropHighPSIFeatures
+from .information_value import SelectByInformationValue
+from .probe_feature_selection import ProbeFeatureSelection
+from .recursive_feature_addition import RecursiveFeatureAddition
+from .recursive_feature_elimination import RecursiveFeatureElimination
+from .shuffle_features import SelectByShuffling
+from .single_feature_performance import SelectBySingleFeaturePerformance
+from .smart_correlation_selection import SmartCorrelatedSelection
+from .target_mean_selection import SelectByTargetMeanPerformance
+from .mrmr import MRMR
+
+__all__ = [
+    "DropFeatures",
+    "DropConstantFeatures",
+    "DropDuplicateFeatures",
+    "DropCorrelatedFeatures",
+    "DropHighPSIFeatures",
+    "SmartCorrelatedSelection",
+    "SelectByShuffling",
+    "SelectBySingleFeaturePerformance",
+    "RecursiveFeatureAddition",
+    "RecursiveFeatureElimination",
+    "SelectByTargetMeanPerformance",
+    "SelectByInformationValue",
+    "ProbeFeatureSelection",
+    "MRMR",
+]
+
+================================================
+FILE: feature_engine/transformation/__init__.py
+================================================
+
+from .arcsin import ArcsinTransformer
+from .boxcox import BoxCoxTransformer
+from .log import LogCpTransformer, LogTransformer
+from .power import PowerTransformer
+from .reciprocal import ReciprocalTransformer
+from .yeojohnson import YeoJohnsonTransformer
+
+__all__ = [
+    "BoxCoxTransformer",
+    "LogTransformer",
+    "LogCpTransformer",
+    "PowerTransformer",
+    "ReciprocalTransformer",
+    "YeoJohnsonTransformer",
+    "ArcsinTransformer",
+]
+
+================================================
+FILE: feature_engine/variable_handling/__init__.py
+================================================
+
+from .check_variables import (
+    check_all_variables,
+    check_categorical_variables,
+    check_datetime_variables,
+    check_numerical_variables,
+)
+from .find_variables import (
+    find_all_variables,
+    find_categorical_and_numerical_variables,
+    find_categorical_variables,
+    find_datetime_variables,
+    find_numerical_variables,
+)
+from .retain_variables import retain_variables_if_in_df
+
+__all__ = [
+    "check_all_variables",
+    "check_numerical_variables",
+    "check_categorical_variables",
+    "check_datetime_variables",
+    "find_all_variables",
+    "find_numerical_variables",
+    "find_categorical_variables",
+    "find_datetime_variables",
+    "find_categorical_and_numerical_variables",
+    "retain_variables_if_in_df",
+]
+
+================================================
+FILE: feature_engine/wrappers/__init__.py
+================================================
+
+from .wrappers import SklearnTransformerWrapper
+
+__all__ = ["SklearnTransformerWrapper"]
