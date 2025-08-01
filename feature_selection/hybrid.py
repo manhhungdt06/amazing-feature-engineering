@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
-from sklearn.metrics import roc_auc_score, mean_squared_error, accuracy_score
+# from sklearn.metrics import roc_auc_score, mean_squared_error, accuracy_score
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.model_selection import cross_val_score
 from sklearn.feature_selection import RFE, RFECV

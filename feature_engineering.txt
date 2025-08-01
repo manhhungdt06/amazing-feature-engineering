@@ -1,0 +1,2010 @@
+Directory structure:
+└── amazing-feature-engineering/
+    ├── data_exploration/
+    │   ├── explore.py
+    │   └── explore_v2.py
+    ├── feature_cleaning/
+    │   ├── missing_data.py
+    │   ├── outlier.py
+    │   └── rare_values.py
+    ├── feature_engineering/
+    │   ├── discretization.py
+    │   ├── encoding.py
+    │   └── transformation.py
+    └── feature_selection/
+        ├── embedded_method.py
+        ├── feature_shuffle.py
+        ├── filter_method.py
+        └── hybrid.py
+
+================================================
+FILE: data_exploration/explore.py
+================================================
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+import os
+
+sns.set_palette("colorblind")
+plt.style.use("default")
+
+def get_dtypes(data, drop_col=[]):
+    name_of_col = list(data.columns)
+    num_var_list = []
+    str_var_list = name_of_col.copy()
+    for var in name_of_col:
+        if data[var].dtypes in (int, np.int64, np.uint, np.int32, float, np.float64, np.float32, np.double):
+            str_var_list.remove(var)
+            num_var_list.append(var)
+    for var in drop_col:
+        if var in str_var_list:
+            str_var_list.remove(var)
+        if var in num_var_list:
+            num_var_list.remove(var)
+    all_var_list = str_var_list + num_var_list
+    return str_var_list, num_var_list, all_var_list
+
+def describe(data, output_path=None):
+    result = data.describe(include="all")
+    if output_path is not None:
+        output = os.path.join(output_path, "describe.csv")
+        result.to_csv(output)
+    return result
+
+def discrete_var_barplot(x, y, data, output_path=None):
+    plt.figure(figsize=(15, 10))
+    sns.barplot(x=x, y=y, data=data)
+    if output_path is not None:
+        output = os.path.join(output_path, "Barplot_" +
+                              str(x) + "_" + str(y) + ".png")
+        plt.savefig(output)
+
+def discrete_var_countplot(x, data, output_path=None):
+    plt.figure(figsize=(15, 10))
+    sns.countplot(x=x, data=data)
+    if output_path is not None:
+        output = os.path.join(output_path, "Countplot_" + str(x) + ".png")
+        plt.savefig(output)
+
+def discrete_var_boxplot(x, y, data, output_path=None):
+    plt.figure(figsize=(15, 10))
+    sns.boxplot(x=x, y=y, data=data)
+    if output_path is not None:
+        output = os.path.join(output_path, "Boxplot_" +
+                              str(x) + "_" + str(y) + ".png")
+        plt.savefig(output)
+
+def continuous_var_distplot(x, output_path=None, bins=None):
+    plt.figure(figsize=(15, 10))
+    sns.histplot(data=x, kde=False, bins=bins)
+    if output_path is not None:
+        output = os.path.join(output_path, "Distplot_" + str(x.name) + ".png")
+        plt.savefig(output)
+
+def scatter_plot(x, y, data, output_path=None):
+    plt.figure(figsize=(10, 6))
+    sns.scatterplot(x=x, y=y, data=data)
+    if output_path is not None:
+        x_name = x if isinstance(x, str) else x.name
+        y_name = y if isinstance(y, str) else y.name
+        output = os.path.join(output_path, "Scatter_plot_" +
+                              str(x_name) + "_" + str(y_name) + ".png")
+        plt.savefig(output, dpi=100, bbox_inches='tight')
+
+def correlation_plot(data, output_path=None):
+    corrmat = data.corr()
+    fig, ax = plt.subplots()
+    fig.set_size_inches(11, 11)
+    sns.heatmap(corrmat, cmap="YlGnBu", linewidths=0.5, annot=True)
+    if output_path is not None:
+        output = os.path.join(output_path, "Corr_plot.png")
+        plt.savefig(output)
+
+def heatmap(data, output_path=None, fmt="d"):
+    fig, ax = plt.subplots()
+    fig.set_size_inches(11, 11)
+    sns.heatmap(data, cmap="YlGnBu", linewidths=0.5, annot=True, fmt=fmt)
+    if output_path is not None:
+        output = os.path.join(output_path, "Heatmap.png")
+        plt.savefig(output)
+
+================================================
+FILE: data_exploration/explore_v2.py
+================================================
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+import os
+
+sns.set_palette("colorblind")
+plt.style.use("default")
+
+def get_dtypes(data, drop_col=[]):
+    name_of_col = list(data.columns)
+    num_var_list = []
+    str_var_list = name_of_col.copy()
+    for var in name_of_col:
+        if data[var].dtypes in (int, np.int64, np.uint, np.int32, float, np.float64, np.float32, np.double):
+            str_var_list.remove(var)
+            num_var_list.append(var)
+    for var in drop_col:
+        if var in str_var_list:
+            str_var_list.remove(var)
+        if var in num_var_list:
+            num_var_list.remove(var)
+    all_var_list = str_var_list + num_var_list
+    return str_var_list, num_var_list, all_var_list
+
+def describe(data, output_path=None):
+    result = data.describe(include="all")
+    if output_path is not None:
+        output = os.path.join(output_path, "describe.csv")
+        result.to_csv(output)
+    return result
+
+def discrete_var_barplot(x, y, data, output_path=None):
+    plt.figure(figsize=(10, 6))
+    sns.barplot(x=x, y=y, data=data)
+    if output_path is not None:
+        output = os.path.join(output_path, "Barplot_" +
+                              str(x) + "_" + str(y) + ".png")
+        plt.savefig(output, dpi=100, bbox_inches='tight')
+    plt.close()
+
+def discrete_var_countplot(x, data, output_path=None):
+    plt.figure(figsize=(10, 6))
+    sns.countplot(x=x, data=data)
+    if output_path is not None:
+        output = os.path.join(output_path, "Countplot_" + str(x) + ".png")
+        plt.savefig(output, dpi=100, bbox_inches='tight')
+    plt.close()
+
+def discrete_var_boxplot(x, y, data, output_path=None):
+    plt.figure(figsize=(10, 6))
+    sns.boxplot(x=x, y=y, data=data)
+    if output_path is not None:
+        output = os.path.join(output_path, "Boxplot_" +
+                              str(x) + "_" + str(y) + ".png")
+        plt.savefig(output, dpi=100, bbox_inches='tight')
+    plt.close()
+
+def continuous_var_distplot(x, output_path=None, bins=None):
+    plt.figure(figsize=(10, 6))
+    sns.histplot(data=x, kde=False, bins=bins)
+    if output_path is not None:
+        output = os.path.join(output_path, "Distplot_" + str(x.name) + ".png")
+        plt.savefig(output, dpi=100, bbox_inches='tight')
+    plt.close()
+
+def scatter_plot(x, y, data, output_path=None):
+    plt.figure(figsize=(10, 6))
+    sns.scatterplot(x=x, y=y, data=data)
+    if output_path is not None:
+        x_name = x if isinstance(x, str) else x.name
+        y_name = y if isinstance(y, str) else y.name
+        output = os.path.join(output_path, "Scatter_plot_" +
+                              str(x_name) + "_" + str(y_name) + ".png")
+        plt.savefig(output, dpi=100, bbox_inches='tight')
+    plt.close()
+
+def correlation_plot(data, output_path=None):
+    corrmat = data.corr()
+    fig, ax = plt.subplots(figsize=(8, 8))
+    sns.heatmap(corrmat, cmap="YlGnBu", linewidths=0.5, annot=True)
+    if output_path is not None:
+        output = os.path.join(output_path, "Corr_plot.png")
+        plt.savefig(output, dpi=100, bbox_inches='tight')
+    plt.close()
+
+def heatmap(data, output_path=None, fmt="d"):
+    fig, ax = plt.subplots(figsize=(8, 8))
+    sns.heatmap(data, cmap="YlGnBu", linewidths=0.5, annot=True, fmt=fmt)
+    if output_path is not None:
+        output = os.path.join(output_path, "Heatmap.png")
+        plt.savefig(output, dpi=100, bbox_inches='tight')
+    plt.close()
+
+================================================
+FILE: feature_cleaning/missing_data.py
+================================================
+import pandas as pd
+import numpy as np
+from warnings import warn
+
+def check_missing(data, output_path=None):
+    result = pd.concat([data.isnull().sum(), data.isnull().mean()], axis=1)
+    result = result.rename(columns={0: "total missing", 1: "proportion"})
+    if output_path is not None:
+        result.to_csv(output_path + "missing.csv")
+    return result
+
+def drop_missing(data, axis=0):
+    return data.dropna(axis=axis)
+
+def add_var_denote_NA(data, NA_col=[]):
+    data_copy = data.copy()
+    for i in NA_col:
+        if data_copy[i].isnull().sum() > 0:
+            data_copy[i + "_is_NA"] = np.where(data_copy[i].isnull(), 1, 0)
+        else:
+            warn("Column %s has no missing cases" % i)
+    return data_copy
+
+def impute_NA_with_arbitrary(data, impute_value, NA_col=[]):
+    data_copy = data.copy()
+    for i in NA_col:
+        if data_copy[i].isnull().sum() > 0:
+            data_copy[i] = data_copy[i].fillna(impute_value)
+        else:
+            warn("Column %s has no missing cases" % i)
+    return data_copy
+
+def impute_NA_with_avg(data, strategy="mean", NA_col=[]):
+    data_copy = data.copy()
+    for i in NA_col:
+        if data_copy[i].isnull().sum() > 0:
+            if strategy == "mean":
+                data_copy[i] = data_copy[i].fillna(data[i].mean())
+            elif strategy == "median":
+                data_copy[i] = data_copy[i].fillna(data[i].median())
+            elif strategy == "mode":
+                data_copy[i] = data_copy[i].fillna(data[i].mode()[0])
+        else:
+            warn("Column %s has no missing" % i)
+    return data_copy
+
+def impute_NA_with_end_of_distribution(data, NA_col=[]):
+    data_copy = data.copy()
+    for i in NA_col:
+        if data_copy[i].isnull().sum() > 0:
+            data_copy[i] = data_copy[i].fillna(data[i].mean() + 3 * data[i].std())
+        else:
+            warn("Column %s has no missing" % i)
+    return data_copy
+
+def impute_NA_with_random(data, NA_col=[], random_state=0):
+    data_copy = data.copy()
+    for i in NA_col:
+        if data_copy[i].isnull().sum() > 0:
+            random_sample = data_copy[i].dropna().sample(
+                data_copy[i].isnull().sum(), random_state=random_state, replace=True
+            )
+            random_sample.index = data_copy[data_copy[i].isnull()].index
+            data_copy.loc[data_copy[i].isnull(), i] = random_sample
+        else:
+            warn("Column %s has no missing" % i)
+    return data_copy
+
+def forward_fill_NA(data, NA_col=[]):
+    data_copy = data.copy()
+    for i in NA_col:
+        if data_copy[i].isnull().sum() > 0:
+            data_copy[i] = data_copy[i].fillna(method='ffill')
+        else:
+            warn("Column %s has no missing" % i)
+    return data_copy
+
+def interpolate_NA(data, method='linear', NA_col=[]):
+    data_copy = data.copy()
+    for i in NA_col:
+        if data_copy[i].isnull().sum() > 0:
+            data_copy[i] = data_copy[i].interpolate(method=method)
+        else:
+            warn("Column %s has no missing" % i)
+    return data_copy
+
+def impute_NA_conditional(data, NA_col=[], condition_col=None, weekend_value=0):
+    data_copy = data.copy()
+    for i in NA_col:
+        if data_copy[i].isnull().sum() > 0:
+            if condition_col and condition_col in data_copy.columns:
+                weekend_mask = pd.to_datetime(data_copy[condition_col]).dt.dayofweek >= 5
+                data_copy.loc[weekend_mask & data_copy[i].isnull(), i] = weekend_value
+                data_copy[i] = data_copy[i].fillna(data_copy[i].median())
+            else:
+                data_copy[i] = data_copy[i].fillna(data_copy[i].median())
+        else:
+            warn("Column %s has no missing" % i)
+    return data_copy
+
+================================================
+FILE: feature_cleaning/outlier.py
+================================================
+import pandas as pd
+import numpy as np
+from scipy import stats
+
+def outlier_detect_arbitrary(data, col, upper_fence, lower_fence):
+    para = (upper_fence, lower_fence)
+    outlier_index = (data[col] > upper_fence) | (data[col] < lower_fence)
+    return outlier_index, para
+
+def outlier_detect_IQR(data, col, threshold=1.5):
+    Q1 = data[col].quantile(0.25)
+    Q3 = data[col].quantile(0.75)
+    IQR = Q3 - Q1
+    lower_fence = Q1 - (IQR * threshold)
+    upper_fence = Q3 + (IQR * threshold)
+    para = (upper_fence, lower_fence)
+    outlier_index = (data[col] > upper_fence) | (data[col] < lower_fence)
+    return outlier_index, para
+
+def outlier_detect_zscore(data, col, threshold=3):
+    z_scores = np.abs(stats.zscore(data[col].dropna()))
+    outlier_index = pd.Series(False, index=data.index)
+    outlier_index.iloc[data[col].dropna().index] = z_scores > threshold
+    return outlier_index
+
+def outlier_detect_modified_zscore(data, col, threshold=3.5):
+    median = data[col].median()
+    mad = np.median(np.abs(data[col] - median))
+    modified_z_scores = 0.6745 * (data[col] - median) / mad
+    outlier_index = np.abs(modified_z_scores) > threshold
+    return outlier_index
+
+def outlier_detect_isolation_forest(data, col, contamination=0.1):
+    from sklearn.ensemble import IsolationForest
+    iso_forest = IsolationForest(contamination=contamination, random_state=42)
+    outlier_pred = iso_forest.fit_predict(data[[col]].dropna())
+    outlier_index = pd.Series(False, index=data.index)
+    outlier_index.iloc[data[col].dropna().index] = outlier_pred == -1
+    return outlier_index
+
+def winsorize_percentile(data, col, lower_percentile=5, upper_percentile=95):
+    data_copy = data.copy()
+    lower_val = data[col].quantile(lower_percentile/100)
+    upper_val = data[col].quantile(upper_percentile/100)
+    data_copy[col] = np.clip(data_copy[col], lower_val, upper_val)
+    return data_copy
+
+def outlier_summary(data, cols=None):
+    if cols is None:
+        cols = data.select_dtypes(include=[np.number]).columns
+    
+    summary = []
+    for col in cols:
+        iqr_outliers, _ = outlier_detect_IQR(data, col)
+        zscore_outliers = outlier_detect_zscore(data, col)
+        mad_outliers = outlier_detect_modified_zscore(data, col)
+        
+        summary.append({
+            'column': col,
+            'total_values': len(data[col].dropna()),
+            'iqr_outliers': iqr_outliers.sum(),
+            'zscore_outliers': zscore_outliers.sum(),
+            'mad_outliers': mad_outliers.sum(),
+            'min': data[col].min(),
+            'max': data[col].max()
+        })
+    
+    return pd.DataFrame(summary)
+
+================================================
+FILE: feature_cleaning/rare_values.py
+================================================
+import pandas as pd
+from sklearn.base import BaseEstimator, TransformerMixin
+
+class RareValueHandler(BaseEstimator, TransformerMixin):
+    def __init__(self, threshold=0.05, strategy='group', replacement='rare'):
+        self.threshold = threshold
+        self.strategy = strategy
+        self.replacement = replacement
+        self.mappings_ = {}
+        
+    def fit(self, X, y=None):
+        categorical_cols = X.select_dtypes(include=['object', 'category']).columns
+        
+        for col in categorical_cols:
+            value_counts = X[col].value_counts(normalize=True)
+            rare_values = value_counts[value_counts < self.threshold].index.tolist()
+            
+            if self.strategy == 'group':
+                mapping = {val: self.replacement if val in rare_values else val 
+                          for val in X[col].unique()}
+            elif self.strategy == 'mode':
+                mode_value = X[col].mode().iloc[0] if not X[col].mode().empty else X[col].iloc[0]
+                mapping = {val: mode_value if val in rare_values else val 
+                          for val in X[col].unique()}
+            elif self.strategy == 'drop':
+                mapping = rare_values
+            
+            self.mappings_[col] = {
+                'mapping': mapping,
+                'rare_values': rare_values,
+                'strategy': self.strategy
+            }
+        
+        return self
+    
+    def transform(self, X):
+        X_transformed = X.copy()
+        
+        for col, info in self.mappings_.items():
+            if col in X_transformed.columns:
+                if info['strategy'] == 'drop':
+                    X_transformed = X_transformed[~X_transformed[col].isin(info['rare_values'])]
+                else:
+                    X_transformed[col] = X_transformed[col].map(info['mapping']).fillna(X_transformed[col])
+        
+        return X_transformed
+    
+    def get_rare_summary(self):
+        summary = []
+        for col, info in self.mappings_.items():
+            summary.append({
+                'column': col,
+                'rare_values': info['rare_values'],
+                'rare_count': len(info['rare_values']),
+                'strategy': info['strategy']
+            })
+        return pd.DataFrame(summary)
+
+def detect_rare_values(data, threshold=0.05, return_summary=True):
+    results = {}
+    categorical_cols = data.select_dtypes(include=['object', 'category']).columns
+    
+    for col in categorical_cols:
+        value_counts = data[col].value_counts(normalize=True)
+        rare_values = value_counts[value_counts < threshold]
+        
+        results[col] = {
+            'rare_values': rare_values.index.tolist(),
+            'rare_proportions': rare_values.to_dict(),
+            'total_rare_count': len(rare_values),
+            'rare_percentage': (rare_values.sum() * 100)
+        }
+    
+    if return_summary:
+        summary = pd.DataFrame([
+            {
+                'column': col,
+                'rare_count': info['total_rare_count'],
+                'rare_percentage': f"{info['rare_percentage']:.2f}%"
+            }
+            for col, info in results.items()
+        ])
+        return results, summary
+    
+    return results
+
+class FrequencyEncoder(BaseEstimator, TransformerMixin):
+    def __init__(self, cols=None):
+        self.cols = cols
+        self.frequency_maps_ = {}
+        
+    def fit(self, X, y=None):
+        cols_to_encode = self.cols if self.cols else X.select_dtypes(include=['object', 'category']).columns
+        
+        for col in cols_to_encode:
+            if col in X.columns:
+                self.frequency_maps_[col] = X[col].value_counts(normalize=True).to_dict()
+        
+        return self
+    
+    def transform(self, X):
+        X_transformed = X.copy()
+        
+        for col, freq_map in self.frequency_maps_.items():
+            if col in X_transformed.columns:
+                X_transformed[f"{col}_frequency"] = X_transformed[col].map(freq_map).fillna(0)
+        
+        return X_transformed
+
+================================================
+FILE: feature_engineering/discretization.py
+================================================
+import pandas as pd
+import numpy as np
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.model_selection import cross_val_score
+from sklearn.preprocessing import KBinsDiscretizer
+from sklearn.base import BaseEstimator, TransformerMixin
+import warnings
+
+class UniformDiscretizer(BaseEstimator, TransformerMixin):
+    def __init__(self, n_bins=5, strategy='uniform'):
+        self.n_bins = n_bins
+        self.strategy = strategy
+        self.discretizers_ = {}
+        
+    def fit(self, X, y=None):
+        numeric_cols = X.select_dtypes(include=[np.number]).columns
+        for col in numeric_cols:
+            discretizer = KBinsDiscretizer(n_bins=self.n_bins, encode='ordinal', strategy=self.strategy)
+            discretizer.fit(X[[col]])
+            self.discretizers_[col] = discretizer
+        return self
+    
+    def transform(self, X):
+        X_transformed = X.copy()
+        for col, discretizer in self.discretizers_.items():
+            if col in X_transformed.columns:
+                X_transformed[f"{col}_{self.strategy}"] = discretizer.transform(X_transformed[[col]]).flatten()
+        return X_transformed
+
+class DecisionTreeDiscretizer(BaseEstimator, TransformerMixin):
+    def __init__(self, max_depth=3, min_samples_leaf=50):
+        self.max_depth = max_depth
+        self.min_samples_leaf = min_samples_leaf
+        self.trees_ = {}
+        
+    def fit(self, X, y):
+        numeric_cols = X.select_dtypes(include=[np.number]).columns
+        for col in numeric_cols:
+            if isinstance(self.max_depth, list):
+                best_depth = self._optimize_depth(X[[col]], y, self.max_depth)
+            else:
+                best_depth = self.max_depth
+                
+            tree = DecisionTreeClassifier(max_depth=best_depth, min_samples_leaf=self.min_samples_leaf, random_state=42)
+            tree.fit(X[[col]], y)
+            self.trees_[col] = tree
+        return self
+    
+    def transform(self, X):
+        X_transformed = X.copy()
+        for col, tree in self.trees_.items():
+            if col in X_transformed.columns:
+                X_transformed[f"{col}_tree_bins"] = tree.apply(X_transformed[[col]])
+        return X_transformed
+    
+    def _optimize_depth(self, X, y, depths):
+        best_score = 0
+        best_depth = depths[0]
+        for depth in depths:
+            tree = DecisionTreeClassifier(max_depth=depth, min_samples_leaf=self.min_samples_leaf, random_state=42)
+            scores = cross_val_score(tree, X, y, cv=3, scoring='roc_auc')
+            mean_score = np.mean(scores)
+            if mean_score > best_score:
+                best_score = mean_score
+                best_depth = depth
+        return best_depth
+
+class ChiMergeDiscretizer(BaseEstimator, TransformerMixin):
+    def __init__(self, max_bins=10, confidence_threshold=3.841, min_samples_per_bin=30):
+        self.max_bins = max_bins
+        self.confidence_threshold = confidence_threshold
+        self.min_samples_per_bin = min_samples_per_bin
+        self.bin_edges_ = {}
+        
+    def fit(self, X, y):
+        numeric_cols = X.select_dtypes(include=[np.number]).columns
+        for col in numeric_cols:
+            try:
+                bins = self._chimerge_binning(X[col], y)
+                self.bin_edges_[col] = bins
+            except Exception as e:
+                warnings.warn(f"ChiMerge failed for column {col}: {e}")
+                self.bin_edges_[col] = np.linspace(X[col].min(), X[col].max(), self.max_bins + 1)
+        return self
+    
+    def transform(self, X):
+        X_transformed = X.copy()
+        for col, bins in self.bin_edges_.items():
+            if col in X_transformed.columns:
+                X_transformed[f"{col}_chimerge"] = pd.cut(X_transformed[col], bins=bins, include_lowest=True, duplicates='drop')
+        return X_transformed
+    
+    def _chimerge_binning(self, feature, target):
+        df = pd.DataFrame({'feature': feature, 'target': target}).dropna()
+        df = df.sort_values('feature').reset_index(drop=True)
+        
+        unique_vals = df['feature'].unique()
+        if len(unique_vals) <= self.max_bins:
+            return np.concatenate([[df['feature'].min() - 0.001], unique_vals, [df['feature'].max() + 0.001]])
+        
+        intervals = []
+        for val in unique_vals:
+            subset = df[df['feature'] == val]
+            pos_count = subset['target'].sum()
+            neg_count = len(subset) - pos_count
+            intervals.append([val, pos_count, neg_count])
+        
+        while len(intervals) > self.max_bins:
+            chi_values = []
+            for i in range(len(intervals) - 1):
+                chi_val = self._calculate_chi_square(intervals[i], intervals[i + 1])
+                chi_values.append((chi_val, i))
+            
+            if not chi_values:
+                break
+                
+            min_chi, min_idx = min(chi_values)
+            if min_chi >= self.confidence_threshold and len(intervals) <= self.max_bins:
+                break
+                
+            intervals[min_idx][1] += intervals[min_idx + 1][1]
+            intervals[min_idx][2] += intervals[min_idx + 1][2]
+            intervals[min_idx][0] = intervals[min_idx + 1][0]
+            intervals.pop(min_idx + 1)
+        
+        bins = [interval[0] for interval in intervals]
+        bins = [df['feature'].min() - 0.001] + bins[1:] + [df['feature'].max() + 0.001]
+        return np.array(sorted(set(bins)))
+    
+    def _calculate_chi_square(self, interval1, interval2):
+        a, b = interval1[1], interval1[2]
+        c, d = interval2[1], interval2[2]
+        
+        if (a + c) == 0 or (b + d) == 0 or (a + b) == 0 or (c + d) == 0:
+            return 0
+            
+        numerator = ((a + b + c + d) * (a * d - b * c) ** 2)
+        denominator = (a + b) * (c + d) * (a + c) * (b + d)
+        
+        return numerator / denominator if denominator > 0 else 0
+
+class OptimalBinning(BaseEstimator, TransformerMixin):
+    def __init__(self, method='uniform', **kwargs):
+        self.method = method
+        self.kwargs = kwargs
+        self.binners_ = {}
+        
+    def fit(self, X, y=None):
+        if self.method == 'uniform':
+            self.binner = UniformDiscretizer(**self.kwargs)
+        elif self.method == 'tree':
+            self.binner = DecisionTreeDiscretizer(**self.kwargs)
+        elif self.method == 'chimerge':
+            self.binner = ChiMergeDiscretizer(**self.kwargs)
+        else:
+            raise ValueError(f"Unknown method: {self.method}")
+            
+        self.binner.fit(X, y)
+        return self
+    
+    def transform(self, X):
+        return self.binner.transform(X)
+
+================================================
+FILE: feature_engineering/encoding.py
+================================================
+import numpy as np
+from sklearn.base import BaseEstimator, TransformerMixin
+
+class MeanTargetEncoder(BaseEstimator, TransformerMixin):
+    def __init__(self, cols=None, smoothing=1.0, min_samples_leaf=1, noise_level=0.01):
+        self.cols = cols
+        self.smoothing = smoothing
+        self.min_samples_leaf = min_samples_leaf
+        self.noise_level = noise_level
+        self.mappings_ = {}
+        self.global_mean_ = None
+        
+    def fit(self, X, y):
+        self.global_mean_ = y.mean()
+        cols_to_encode = self.cols if self.cols else X.select_dtypes(include=['object', 'category']).columns
+        
+        for col in cols_to_encode:
+            if col in X.columns:
+                mapping = self._compute_mean_encoding(X[col], y)
+                self.mappings_[col] = mapping
+        return self
+    
+    def transform(self, X):
+        X_transformed = X.copy()
+        for col, mapping in self.mappings_.items():
+            if col in X_transformed.columns:
+                X_transformed[f"{col}_mean_encoded"] = X_transformed[col].map(mapping).fillna(self.global_mean_)
+                if self.noise_level > 0:
+                    noise = np.random.normal(0, self.noise_level, len(X_transformed))
+                    X_transformed[f"{col}_mean_encoded"] += noise
+        return X_transformed
+    
+    def _compute_mean_encoding(self, feature, target):
+        stats = target.groupby(feature).agg(['count', 'mean'])
+        stats.columns = ['count', 'mean']
+        
+        smoothed_means = (stats['count'] * stats['mean'] + self.smoothing * self.global_mean_) / (stats['count'] + self.smoothing)
+        
+        valid_categories = stats[stats['count'] >= self.min_samples_leaf].index
+        mapping = smoothed_means.to_dict()
+        
+        for cat in stats.index:
+            if cat not in valid_categories:
+                mapping[cat] = self.global_mean_
+                
+        return mapping
+
+class FrequencyEncoder(BaseEstimator, TransformerMixin):
+    def __init__(self, cols=None):
+        self.cols = cols
+        self.frequency_maps_ = {}
+        
+    def fit(self, X, y=None):
+        cols_to_encode = self.cols if self.cols else X.select_dtypes(include=['object', 'category']).columns
+        
+        for col in cols_to_encode:
+            if col in X.columns:
+                self.frequency_maps_[col] = X[col].value_counts(normalize=True).to_dict()
+        return self
+    
+    def transform(self, X):
+        X_transformed = X.copy()
+        for col, freq_map in self.frequency_maps_.items():
+            if col in X_transformed.columns:
+                X_transformed[f"{col}_frequency"] = X_transformed[col].map(freq_map).fillna(0)
+        return X_transformed
+
+class BinaryEncoder(BaseEstimator, TransformerMixin):
+    def __init__(self, cols=None, drop_first=True):
+        self.cols = cols
+        self.drop_first = drop_first
+        self.categories_ = {}
+        
+    def fit(self, X, y=None):
+        cols_to_encode = self.cols if self.cols else X.select_dtypes(include=['object', 'category']).columns
+        
+        for col in cols_to_encode:
+            if col in X.columns:
+                self.categories_[col] = X[col].unique().tolist()
+        return self
+    
+    def transform(self, X):
+        X_transformed = X.copy()
+        
+        for col, categories in self.categories_.items():
+            if col in X_transformed.columns:
+                for i, category in enumerate(categories):
+                    if self.drop_first and i == 0:
+                        continue
+                    X_transformed[f"{col}_{category}"] = (X_transformed[col] == category).astype(int)
+                X_transformed.drop(col, axis=1, inplace=True)
+        
+        return X_transformed
+
+class LabelEncoder(BaseEstimator, TransformerMixin):
+    def __init__(self, cols=None):
+        self.cols = cols
+        self.label_maps_ = {}
+        
+    def fit(self, X, y=None):
+        cols_to_encode = self.cols if self.cols else X.select_dtypes(include=['object', 'category']).columns
+        
+        for col in cols_to_encode:
+            if col in X.columns:
+                unique_vals = X[col].unique()
+                self.label_maps_[col] = {val: idx for idx, val in enumerate(unique_vals)}
+        return self
+    
+    def transform(self, X):
+        X_transformed = X.copy()
+        for col, label_map in self.label_maps_.items():
+            if col in X_transformed.columns:
+                X_transformed[f"{col}_label_encoded"] = X_transformed[col].map(label_map).fillna(-1)
+        return X_transformed
+
+class MultiEncoder(BaseEstimator, TransformerMixin):
+    def __init__(self, encoders_config):
+        self.encoders_config = encoders_config
+        self.encoders_ = {}
+        
+    def fit(self, X, y=None):
+        for encoder_name, config in self.encoders_config.items():
+            encoder_class = config['encoder']
+            encoder_params = config.get('params', {})
+            encoder_cols = config.get('cols', None)
+            
+            encoder = encoder_class(cols=encoder_cols, **encoder_params)
+            encoder.fit(X, y)
+            self.encoders_[encoder_name] = encoder
+        return self
+    
+    def transform(self, X):
+        X_transformed = X.copy()
+        for encoder_name, encoder in self.encoders_.items():
+            X_transformed = encoder.transform(X_transformed)
+        return X_transformed
+
+================================================
+FILE: feature_engineering/transformation.py
+================================================
+import numpy as np
+import matplotlib.pyplot as plt
+import scipy.stats as stats
+from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.preprocessing import PowerTransformer, QuantileTransformer
+import warnings
+
+class LogTransformer(BaseEstimator, TransformerMixin):
+    def __init__(self, cols=None, offset=1):
+        self.cols = cols
+        self.offset = offset
+        self.fitted_cols_ = []
+        
+    def fit(self, X, y=None):
+        cols_to_transform = self.cols if self.cols else X.select_dtypes(include=[np.number]).columns
+        
+        for col in cols_to_transform:
+            if col in X.columns and (X[col] > 0).all():
+                self.fitted_cols_.append(col)
+            elif col in X.columns:
+                warnings.warn(f"Column {col} contains non-positive values, will add offset")
+                self.fitted_cols_.append(col)
+        return self
+    
+    def transform(self, X):
+        X_transformed = X.copy()
+        for col in self.fitted_cols_:
+            if col in X_transformed.columns:
+                X_transformed[f"{col}_log"] = np.log(X_transformed[col] + self.offset)
+        return X_transformed
+
+class PowerTransformerWrapper(BaseEstimator, TransformerMixin):
+    def __init__(self, cols=None, method='yeo-johnson'):
+        self.cols = cols
+        self.method = method
+        self.transformers_ = {}
+        
+    def fit(self, X, y=None):
+        cols_to_transform = self.cols if self.cols else X.select_dtypes(include=[np.number]).columns
+        
+        for col in cols_to_transform:
+            if col in X.columns:
+                transformer = PowerTransformer(method=self.method, standardize=False)
+                transformer.fit(X[[col]])
+                self.transformers_[col] = transformer
+        return self
+    
+    def transform(self, X):
+        X_transformed = X.copy()
+        for col, transformer in self.transformers_.items():
+            if col in X_transformed.columns:
+                X_transformed[f"{col}_{self.method}"] = transformer.transform(X_transformed[[col]]).flatten()
+        return X_transformed
+
+class QuantileTransformerWrapper(BaseEstimator, TransformerMixin):
+    def __init__(self, cols=None, output_distribution='normal', n_quantiles=1000):
+        self.cols = cols
+        self.output_distribution = output_distribution
+        self.n_quantiles = n_quantiles
+        self.transformers_ = {}
+        
+    def fit(self, X, y=None):
+        cols_to_transform = self.cols if self.cols else X.select_dtypes(include=[np.number]).columns
+        
+        for col in cols_to_transform:
+            if col in X.columns:
+                n_quantiles = min(self.n_quantiles, len(X[col].dropna()))
+                transformer = QuantileTransformer(output_distribution=self.output_distribution, n_quantiles=n_quantiles)
+                transformer.fit(X[[col]])
+                self.transformers_[col] = transformer
+        return self
+    
+    def transform(self, X):
+        X_transformed = X.copy()
+        for col, transformer in self.transformers_.items():
+            if col in X_transformed.columns:
+                X_transformed[f"{col}_quantile"] = transformer.transform(X_transformed[[col]]).flatten()
+        return X_transformed
+
+class CustomTransformer(BaseEstimator, TransformerMixin):
+    def __init__(self, cols=None, transform_func=None, func_name='custom'):
+        self.cols = cols
+        self.transform_func = transform_func
+        self.func_name = func_name
+        self.fitted_cols_ = []
+        
+    def fit(self, X, y=None):
+        cols_to_transform = self.cols if self.cols else X.select_dtypes(include=[np.number]).columns
+        self.fitted_cols_ = [col for col in cols_to_transform if col in X.columns]
+        return self
+    
+    def transform(self, X):
+        X_transformed = X.copy()
+        for col in self.fitted_cols_:
+            if col in X_transformed.columns:
+                try:
+                    X_transformed[f"{col}_{self.func_name}"] = self.transform_func(X_transformed[col])
+                except Exception as e:
+                    warnings.warn(f"Transformation failed for column {col}: {e}")
+        return X_transformed
+
+class MultiTransformer(BaseEstimator, TransformerMixin):
+    def __init__(self, transformers_config):
+        self.transformers_config = transformers_config
+        self.transformers_ = {}
+        
+    def fit(self, X, y=None):
+        for transformer_name, config in self.transformers_config.items():
+            transformer_class = config['transformer']
+            transformer_params = config.get('params', {})
+            
+            transformer = transformer_class(**transformer_params)
+            transformer.fit(X, y)
+            self.transformers_[transformer_name] = transformer
+        return self
+    
+    def transform(self, X):
+        X_transformed = X.copy()
+        for transformer_name, transformer in self.transformers_.items():
+            X_transformed = transformer.transform(X_transformed)
+        return X_transformed
+
+def normality_test(data, column):
+    stat, p_value = stats.shapiro(data[column].dropna())
+    return {'statistic': stat, 'p_value': p_value, 'is_normal': p_value > 0.05}
+
+def diagnostic_plots(df, variable, figsize=(12, 8)):
+    fig, axes = plt.subplots(2, 2, figsize=figsize)
+    
+    axes[0, 0].hist(df[variable].dropna(), bins=30, alpha=0.7)
+    axes[0, 0].set_title(f'Histogram of {variable}')
+    
+    stats.probplot(df[variable].dropna(), dist="norm", plot=axes[0, 1])
+    axes[0, 1].set_title(f'Q-Q Plot of {variable}')
+    
+    axes[1, 0].boxplot(df[variable].dropna())
+    axes[1, 0].set_title(f'Box Plot of {variable}')
+    
+    df[variable].plot(kind='density', ax=axes[1, 1])
+    axes[1, 1].set_title(f'Density Plot of {variable}')
+    
+    plt.tight_layout()
+    plt.show()
+    
+    normality = normality_test(df, variable)
+    print(f"Normality Test Results for {variable}:")
+    print(f"Shapiro-Wilk Statistic: {normality['statistic']:.4f}")
+    print(f"P-value: {normality['p_value']:.4f}")
+    print(f"Is Normal: {normality['is_normal']}")
+
+def suggest_transformation(data, column):
+    skewness = stats.skew(data[column].dropna())
+    kurtosis = stats.kurtosis(data[column].dropna())
+    
+    suggestions = []
+    
+    if abs(skewness) > 1:
+        if skewness > 0:
+            suggestions.append("log transformation (right-skewed)")
+            suggestions.append("square root transformation")
+        else:
+            suggestions.append("square transformation (left-skewed)")
+    
+    if abs(kurtosis) > 3:
+        suggestions.append("Box-Cox transformation")
+        suggestions.append("Quantile transformation")
+    
+    if not suggestions:
+        suggestions.append("Data appears relatively normal")
+    
+    return {
+        'skewness': skewness,
+        'kurtosis': kurtosis,
+        'suggestions': suggestions
+    }
+
+================================================
+FILE: feature_selection/embedded_method.py
+================================================
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier, RandomForestRegressor
+from sklearn.linear_model import LassoCV, RidgeCV, ElasticNetCV, LogisticRegressionCV
+from sklearn.feature_selection import SelectFromModel
+from sklearn.base import BaseEstimator, TransformerMixin
+
+class TreeBasedSelector(BaseEstimator, TransformerMixin):
+    def __init__(self, 
+                 estimator='random_forest',
+                 task='classification',
+                 n_estimators=100,
+                 max_depth=None,
+                 random_state=42,
+                 threshold='mean',
+                 top_k=None):
+        
+        self.estimator = estimator
+        self.task = task
+        self.n_estimators = n_estimators
+        self.max_depth = max_depth
+        self.random_state = random_state
+        self.threshold = threshold
+        self.top_k = top_k
+        
+        self.model_ = None
+        self.selector_ = None
+        self.feature_importances_ = None
+        
+    def fit(self, X, y):
+        if self.task == 'classification':
+            if self.estimator == 'random_forest':
+                self.model_ = RandomForestClassifier(
+                    n_estimators=self.n_estimators,
+                    max_depth=self.max_depth,
+                    random_state=self.random_state,
+                    n_jobs=-1
+                )
+            elif self.estimator == 'gradient_boosting':
+                self.model_ = GradientBoostingClassifier(
+                    n_estimators=self.n_estimators,
+                    max_depth=self.max_depth,
+                    random_state=self.random_state
+                )
+        else:
+            if self.estimator == 'random_forest':
+                self.model_ = RandomForestRegressor(
+                    n_estimators=self.n_estimators,
+                    max_depth=self.max_depth,
+                    random_state=self.random_state,
+                    n_jobs=-1
+                )
+        
+        self.model_.fit(X, y)
+        
+        self.feature_importances_ = pd.Series(
+            self.model_.feature_importances_,
+            index=X.columns
+        ).sort_values(ascending=False)
+        
+        if self.top_k:
+            selected_features = self.feature_importances_.head(self.top_k).index
+            self.selector_ = selected_features
+        else:
+            self.selector_ = SelectFromModel(self.model_, threshold=self.threshold, prefit=True)
+        
+        return self
+    
+    def transform(self, X):
+        if self.top_k:
+            return X[self.selector_]
+        else:
+            return pd.DataFrame(
+                self.selector_.transform(X),
+                columns=X.columns[self.selector_.get_support()],
+                index=X.index
+            )
+    
+    def plot_importance(self, top_n=20, figsize=(10, 8)):
+        top_features = self.feature_importances_.head(top_n)
+        
+        plt.figure(figsize=figsize)
+        top_features.plot(kind='barh')
+        plt.title(f'Top {top_n} Feature Importances ({self.estimator})')
+        plt.xlabel('Importance')
+        plt.tight_layout()
+        plt.show()
+    
+    def get_feature_importance_df(self):
+        return self.feature_importances_.reset_index().rename(
+            columns={'index': 'feature', 0: 'importance'}
+        )
+
+class LinearSelector(BaseEstimator, TransformerMixin):
+    def __init__(self, 
+                 estimator='lasso',
+                 task='classification',
+                 alpha=None,
+                 cv=5,
+                 random_state=42,
+                 threshold='mean'):
+        
+        self.estimator = estimator
+        self.task = task
+        self.alpha = alpha
+        self.cv = cv
+        self.random_state = random_state
+        self.threshold = threshold
+        
+        self.model_ = None
+        self.selector_ = None
+        self.coefficients_ = None
+        
+    def fit(self, X, y):
+        if self.task == 'classification':
+            if self.estimator == 'lasso':
+                self.model_ = LogisticRegressionCV(
+                    penalty='l1',
+                    solver='liblinear',
+                    cv=self.cv,
+                    random_state=self.random_state,
+                    max_iter=1000
+                )
+            elif self.estimator == 'ridge':
+                self.model_ = LogisticRegressionCV(
+                    penalty='l2',
+                    cv=self.cv,
+                    random_state=self.random_state,
+                    max_iter=1000
+                )
+        else:
+            if self.estimator == 'lasso':
+                self.model_ = LassoCV(cv=self.cv, random_state=self.random_state)
+            elif self.estimator == 'ridge':
+                self.model_ = RidgeCV(cv=self.cv)
+            elif self.estimator == 'elastic_net':
+                self.model_ = ElasticNetCV(cv=self.cv, random_state=self.random_state)
+        
+        self.model_.fit(X, y)
+        
+        if hasattr(self.model_, 'coef_'):
+            if self.model_.coef_.ndim > 1:
+                coefficients = self.model_.coef_[0]
+            else:
+                coefficients = self.model_.coef_
+        else:
+            coefficients = self.model_.feature_importances_
+        
+        self.coefficients_ = pd.Series(
+            np.abs(coefficients),
+            index=X.columns
+        ).sort_values(ascending=False)
+        
+        self.selector_ = SelectFromModel(self.model_, threshold=self.threshold, prefit=True)
+        
+        return self
+    
+    def transform(self, X):
+        return pd.DataFrame(
+            self.selector_.transform(X),
+            columns=X.columns[self.selector_.get_support()],
+            index=X.index
+        )
+    
+    def get_selected_features(self, X):
+        return X.columns[self.selector_.get_support()].tolist()
+
+class EnsembleSelector(BaseEstimator, TransformerMixin):
+    def __init__(self, 
+                 selectors_config,
+                 voting_threshold=0.5,
+                 combination_method='union'):
+        
+        self.selectors_config = selectors_config
+        self.voting_threshold = voting_threshold
+        self.combination_method = combination_method
+        
+        self.selectors_ = {}
+        self.feature_votes_ = None
+        self.selected_features_ = []
+        
+    def fit(self, X, y):
+        feature_selections = {}
+        
+        for name, config in self.selectors_config.items():
+            selector_class = config['selector']
+            selector_params = config.get('params', {})
+            
+            selector = selector_class(**selector_params)
+            selector.fit(X, y)
+            
+            if hasattr(selector, 'get_selected_features'):
+                selected = selector.get_selected_features()
+            else:
+                selected = selector.transform(X).columns.tolist()
+            
+            feature_selections[name] = selected
+            self.selectors_[name] = selector
+        
+        all_features = set()
+        for features in feature_selections.values():
+            all_features.update(features)
+        
+        feature_votes = {}
+        for feature in all_features:
+            votes = sum(1 for features in feature_selections.values() if feature in features)
+            feature_votes[feature] = votes / len(self.selectors_config)
+        
+        self.feature_votes_ = pd.Series(feature_votes).sort_values(ascending=False)
+        
+        if self.combination_method == 'union':
+            self.selected_features_ = list(all_features)
+        elif self.combination_method == 'intersection':
+            self.selected_features_ = list(set.intersection(*[set(features) for features in feature_selections.values()]))
+        elif self.combination_method == 'voting':
+            self.selected_features_ = self.feature_votes_[self.feature_votes_ >= self.voting_threshold].index.tolist()
+        
+        print(f"Ensemble selection: {len(self.selected_features_)} features selected")
+        return self
+    
+    def transform(self, X):
+        return X[self.selected_features_]
+    
+    def get_voting_results(self):
+        return self.feature_votes_.reset_index().rename(
+            columns={'index': 'feature', 0: 'vote_percentage'}
+        )
+
+================================================
+FILE: feature_selection/feature_shuffle.py
+================================================
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
+from sklearn.metrics import roc_auc_score, mean_squared_error, accuracy_score
+from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.model_selection import cross_val_score
+import warnings
+
+class PermutationImportanceSelector(BaseEstimator, TransformerMixin):
+    def __init__(self, 
+                 estimator=None,
+                 scoring='roc_auc',
+                 n_repeats=5,
+                 random_state=42,
+                 threshold=0.001,
+                 cv=None):
+        
+        self.estimator = estimator
+        self.scoring = scoring
+        self.n_repeats = n_repeats
+        self.random_state = random_state
+        self.threshold = threshold
+        self.cv = cv
+        
+        self.feature_importances_ = None
+        self.baseline_score_ = None
+        self.selected_features_ = []
+        
+    def fit(self, X, y):
+        if self.estimator is None:
+            if len(np.unique(y)) == 2:
+                self.estimator = RandomForestClassifier(n_estimators=100, random_state=self.random_state, n_jobs=-1)
+            else:
+                self.estimator = RandomForestRegressor(n_estimators=100, random_state=self.random_state, n_jobs=-1)
+        
+        self.estimator.fit(X, y)
+        
+        if self.cv:
+            baseline_scores = cross_val_score(self.estimator, X, y, cv=self.cv, scoring=self.scoring)
+            self.baseline_score_ = np.mean(baseline_scores)
+        else:
+            self.baseline_score_ = self._calculate_score(X, y)
+        
+        feature_importances = {}
+        
+        for feature in X.columns:
+            importance_values = []
+            
+            for repeat in range(self.n_repeats):
+                X_permuted = X.copy()
+                np.random.seed(self.random_state + repeat)
+                X_permuted[feature] = np.random.permutation(X_permuted[feature])
+                
+                if self.cv:
+                    permuted_scores = cross_val_score(self.estimator, X_permuted, y, cv=self.cv, scoring=self.scoring)
+                    permuted_score = np.mean(permuted_scores)
+                else:
+                    permuted_score = self._calculate_score(X_permuted, y)
+                
+                importance = self.baseline_score_ - permuted_score
+                importance_values.append(importance)
+            
+            feature_importances[feature] = {
+                'mean_importance': np.mean(importance_values),
+                'std_importance': np.std(importance_values),
+                'importance_values': importance_values
+            }
+        
+        self.feature_importances_ = pd.DataFrame(feature_importances).T
+        self.feature_importances_ = self.feature_importances_.sort_values('mean_importance', ascending=False)
+        
+        self.selected_features_ = self.feature_importances_[
+            self.feature_importances_['mean_importance'] > self.threshold
+        ].index.tolist()
+        
+        print(f"Permutation importance: {len(self.selected_features_)} features selected")
+        return self
+    
+    def transform(self, X):
+        return X[self.selected_features_]
+    
+    def _calculate_score(self, X, y):
+        if self.scoring == 'roc_auc':
+            y_pred_proba = self.estimator.predict_proba(X)[:, 1]
+            return roc_auc_score(y, y_pred_proba)
+        elif self.scoring == 'accuracy':
+            y_pred = self.estimator.predict(X)
+            return accuracy_score(y, y_pred)
+        elif self.scoring == 'neg_mean_squared_error':
+            y_pred = self.estimator.predict(X)
+            return -mean_squared_error(y, y_pred)
+    
+    def plot_importance(self, top_n=20, figsize=(12, 8)):
+        top_features = self.feature_importances_.head(top_n)
+        
+        plt.figure(figsize=figsize)
+        plt.barh(range(len(top_features)), top_features['mean_importance'], 
+                xerr=top_features['std_importance'], alpha=0.7)
+        plt.yticks(range(len(top_features)), top_features.index)
+        plt.xlabel('Permutation Importance')
+        plt.title(f'Top {top_n} Features by Permutation Importance')
+        plt.gca().invert_yaxis()
+        plt.tight_layout()
+        plt.show()
+
+class DroppingFeatureSelector(BaseEstimator, TransformerMixin):
+    def __init__(self, 
+                 estimator=None,
+                 scoring='roc_auc',
+                 cv=3,
+                 threshold=0.001,
+                 random_state=42):
+        
+        self.estimator = estimator
+        self.scoring = scoring
+        self.cv = cv
+        self.threshold = threshold
+        self.random_state = random_state
+        
+        self.feature_importances_ = None
+        self.baseline_score_ = None
+        self.selected_features_ = []
+        
+    def fit(self, X, y):
+        if self.estimator is None:
+            if len(np.unique(y)) == 2:
+                self.estimator = RandomForestClassifier(n_estimators=50, random_state=self.random_state, n_jobs=-1)
+            else:
+                self.estimator = RandomForestRegressor(n_estimators=50, random_state=self.random_state, n_jobs=-1)
+        
+        baseline_scores = cross_val_score(self.estimator, X, y, cv=self.cv, scoring=self.scoring)
+        self.baseline_score_ = np.mean(baseline_scores)
+        
+        feature_importances = {}
+        
+        for feature in X.columns:
+            X_dropped = X.drop(columns=[feature])
+            
+            try:
+                dropped_scores = cross_val_score(self.estimator, X_dropped, y, cv=self.cv, scoring=self.scoring)
+                dropped_score = np.mean(dropped_scores)
+                importance = self.baseline_score_ - dropped_score
+                feature_importances[feature] = importance
+            except Exception as e:
+                warnings.warn(f"Error processing feature {feature}: {e}")
+                feature_importances[feature] = 0
+        
+        self.feature_importances_ = pd.Series(feature_importances).sort_values(ascending=False)
+        
+        self.selected_features_ = self.feature_importances_[
+            self.feature_importances_ > self.threshold
+        ].index.tolist()
+        
+        print(f"Drop feature importance: {len(self.selected_features_)} features selected")
+        return self
+    
+    def transform(self, X):
+        return X[self.selected_features_]
+
+================================================
+FILE: feature_selection/filter_method.py
+================================================
+import pandas as pd
+import numpy as np
+from sklearn.feature_selection import mutual_info_classif, chi2, SelectKBest, SelectPercentile, f_classif, f_regression
+from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
+from sklearn.metrics import roc_auc_score, mean_squared_error
+from sklearn.base import BaseEstimator, TransformerMixin
+from scipy.stats import pearsonr
+import warnings
+
+class ConstantFeatureFilter(BaseEstimator, TransformerMixin):
+    def __init__(self, threshold=0.98):
+        self.threshold = threshold
+        self.constant_features_ = []
+        
+    def fit(self, X, y=None):
+        self.constant_features_ = []
+        for feature in X.columns:
+            if X[feature].dtype in ['object', 'category']:
+                max_freq = X[feature].value_counts(normalize=True).max()
+            else:
+                max_freq = (X[feature].value_counts(normalize=True)).max()
+            
+            if max_freq >= self.threshold:
+                self.constant_features_.append(feature)
+        
+        print(f"{len(self.constant_features_)} constant features detected")
+        return self
+    
+    def transform(self, X):
+        return X.drop(columns=self.constant_features_, errors='ignore')
+    
+    def get_constant_features(self):
+        return self.constant_features_
+
+class CorrelationFilter(BaseEstimator, TransformerMixin):
+    def __init__(self, threshold=0.95, method='pearson'):
+        self.threshold = threshold
+        self.method = method
+        self.correlated_features_ = []
+        self.correlation_groups_ = []
+        
+    def fit(self, X, y=None):
+        numeric_cols = X.select_dtypes(include=[np.number]).columns
+        
+        if self.method == 'pearson':
+            corr_matrix = X[numeric_cols].corr().abs()
+        elif self.method == 'spearman':
+            corr_matrix = X[numeric_cols].corr(method='spearman').abs()
+        
+        upper_tri = corr_matrix.where(np.triu(np.ones(corr_matrix.shape), k=1).astype(bool))
+        
+        corr_pairs = []
+        for col in upper_tri.columns:
+            for row in upper_tri.index:
+                if pd.notna(upper_tri.loc[row, col]) and upper_tri.loc[row, col] >= self.threshold:
+                    corr_pairs.append((row, col, upper_tri.loc[row, col]))
+        
+        corr_df = pd.DataFrame(corr_pairs, columns=['feature1', 'feature2', 'correlation'])
+        corr_df = corr_df.sort_values('correlation', ascending=False)
+        
+        self.correlation_groups_ = []
+        processed_features = set()
+        
+        for _, row in corr_df.iterrows():
+            f1, f2 = row['feature1'], row['feature2']
+            if f1 not in processed_features and f2 not in processed_features:
+                group = self._find_correlation_group(corr_df, f1, processed_features)
+                if len(group) > 1:
+                    self.correlation_groups_.append(group)
+                    processed_features.update(group)
+        
+        for group in self.correlation_groups_:
+            self.correlated_features_.extend(group[1:])
+        
+        print(f"{len(self.correlated_features_)} correlated features detected")
+        return self
+    
+    def transform(self, X):
+        return X.drop(columns=self.correlated_features_, errors='ignore')
+    
+    def _find_correlation_group(self, corr_df, start_feature, processed):
+        group = {start_feature}
+        queue = [start_feature]
+        
+        while queue:
+            current = queue.pop(0)
+            related = corr_df[
+                (corr_df['feature1'] == current) | (corr_df['feature2'] == current)
+            ]
+            
+            for _, row in related.iterrows():
+                f1, f2 = row['feature1'], row['feature2']
+                new_feature = f2 if f1 == current else f1
+                
+                if new_feature not in group and new_feature not in processed:
+                    group.add(new_feature)
+                    queue.append(new_feature)
+        
+        return list(group)
+
+class StatisticalFilter(BaseEstimator, TransformerMixin):
+    def __init__(self, method='mutual_info', k=10, score_func=None):
+        self.method = method
+        self.k = k
+        self.score_func = score_func
+        self.selected_features_ = []
+        self.scores_ = None
+        
+    def fit(self, X, y):
+        if self.method == 'mutual_info':
+            score_func = mutual_info_classif
+        elif self.method == 'chi2':
+            score_func = chi2
+        elif self.method == 'f_classif':
+            score_func = f_classif
+        elif self.method == 'f_regression':
+            score_func = f_regression
+        elif self.method == 'custom' and self.score_func:
+            score_func = self.score_func
+        else:
+            raise ValueError(f"Unknown method: {self.method}")
+        
+        if isinstance(self.k, float) and 0 < self.k < 1:
+            selector = SelectPercentile(score_func, percentile=self.k * 100)
+        else:
+            selector = SelectKBest(score_func, k=self.k)
+        
+        selector.fit(X, y)
+        self.selected_features_ = X.columns[selector.get_support()].tolist()
+        self.scores_ = pd.Series(selector.scores_, index=X.columns).sort_values(ascending=False)
+        
+        return self
+    
+    def transform(self, X):
+        return X[self.selected_features_]
+
+class UnivariateFilter(BaseEstimator, TransformerMixin):
+    def __init__(self, method='roc_auc', threshold=0.6, task='classification'):
+        self.method = method
+        self.threshold = threshold
+        self.task = task
+        self.feature_scores_ = None
+        self.selected_features_ = []
+        
+    def fit(self, X, y):
+        scores = {}
+        
+        for feature in X.columns:
+            try:
+                if self.task == 'classification':
+                    if self.method == 'roc_auc':
+                        model = DecisionTreeClassifier(random_state=42, max_depth=3)
+                        model.fit(X[[feature]], y)
+                        y_pred_proba = model.predict_proba(X[[feature]])[:, 1]
+                        score = roc_auc_score(y, y_pred_proba)
+                    elif self.method == 'correlation':
+                        score = abs(pearsonr(X[feature], y)[0])
+                else:
+                    if self.method == 'mse':
+                        model = DecisionTreeRegressor(random_state=42, max_depth=3)
+                        model.fit(X[[feature]], y)
+                        y_pred = model.predict(X[[feature]])
+                        score = -mean_squared_error(y, y_pred)
+                    elif self.method == 'correlation':
+                        score = abs(pearsonr(X[feature], y)[0])
+                
+                scores[feature] = score
+                
+            except Exception as e:
+                warnings.warn(f"Error processing feature {feature}: {e}")
+                scores[feature] = 0
+        
+        self.feature_scores_ = pd.Series(scores).sort_values(ascending=False)
+        
+        if self.task == 'classification' and self.method == 'roc_auc':
+            self.selected_features_ = self.feature_scores_[self.feature_scores_ > self.threshold].index.tolist()
+        elif self.method == 'correlation':
+            self.selected_features_ = self.feature_scores_[self.feature_scores_ > self.threshold].index.tolist()
+        else:
+            self.selected_features_ = self.feature_scores_[self.feature_scores_ > self.threshold].index.tolist()
+        
+        print(f"{len(self.selected_features_)} features selected based on {self.method}")
+        return self
+    
+    def transform(self, X):
+        return X[self.selected_features_]
+
+class VarianceFilter(BaseEstimator, TransformerMixin):
+    def __init__(self, threshold=0.0):
+        self.threshold = threshold
+        self.low_variance_features_ = []
+        
+    def fit(self, X, y=None):
+        numeric_cols = X.select_dtypes(include=[np.number]).columns
+        
+        for col in numeric_cols:
+            if X[col].var() <= self.threshold:
+                self.low_variance_features_.append(col)
+        
+        print(f"{len(self.low_variance_features_)} low variance features detected")
+        return self
+    
+    def transform(self, X):
+        return X.drop(columns=self.low_variance_features_, errors='ignore')
+
+class ComprehensiveFilter(BaseEstimator, TransformerMixin):
+    def __init__(self, 
+                 constant_threshold=0.98,
+                 correlation_threshold=0.95,
+                 variance_threshold=0.0,
+                 statistical_method='mutual_info',
+                 statistical_k=20,
+                 univariate_method='roc_auc',
+                 univariate_threshold=0.6):
+        
+        self.constant_filter = ConstantFeatureFilter(constant_threshold)
+        self.correlation_filter = CorrelationFilter(correlation_threshold)
+        self.variance_filter = VarianceFilter(variance_threshold)
+        self.statistical_filter = StatisticalFilter(statistical_method, statistical_k)
+        self.univariate_filter = UnivariateFilter(univariate_method, univariate_threshold)
+        
+        self.filtering_results_ = {}
+        
+    def fit(self, X, y):
+        X_temp = X.copy()
+        
+        print("Step 1: Removing constant features...")
+        self.constant_filter.fit(X_temp)
+        X_temp = self.constant_filter.transform(X_temp)
+        self.filtering_results_['constant'] = len(X.columns) - len(X_temp.columns)
+        
+        print("Step 2: Removing low variance features...")
+        self.variance_filter.fit(X_temp)
+        X_temp = self.variance_filter.transform(X_temp)
+        self.filtering_results_['variance'] = len(X.columns) - len(X_temp.columns) - self.filtering_results_['constant']
+        
+        print("Step 3: Removing correlated features...")
+        self.correlation_filter.fit(X_temp)
+        X_temp = self.correlation_filter.transform(X_temp)
+        self.filtering_results_['correlation'] = len(X.columns) - len(X_temp.columns) - sum(self.filtering_results_.values())
+        
+        print("Step 4: Statistical feature selection...")
+        if len(X_temp.columns) > 0:
+            self.statistical_filter.fit(X_temp, y)
+            X_temp = self.statistical_filter.transform(X_temp)
+        self.filtering_results_['statistical'] = len(X.columns) - len(X_temp.columns) - sum(self.filtering_results_.values())
+        
+        print("Step 5: Univariate feature selection...")
+        if len(X_temp.columns) > 0:
+            self.univariate_filter.fit(X_temp, y)
+            X_temp = self.univariate_filter.transform(X_temp)
+        self.filtering_results_['univariate'] = len(X.columns) - len(X_temp.columns) - sum(self.filtering_results_.values())
+        
+        print(f"\nFiltering Summary:")
+        print(f"Original features: {len(X.columns)}")
+        print(f"Final features: {len(X_temp.columns)}")
+        for step, removed in self.filtering_results_.items():
+            print(f"{step.capitalize()} removed: {removed}")
+        
+        return self
+    
+    def transform(self, X):
+        X_temp = X.copy()
+        X_temp = self.constant_filter.transform(X_temp)
+        X_temp = self.variance_filter.transform(X_temp)
+        X_temp = self.correlation_filter.transform(X_temp)
+        
+        if len(X_temp.columns) > 0:
+            X_temp = self.statistical_filter.transform(X_temp)
+        if len(X_temp.columns) > 0:
+            X_temp = self.univariate_filter.transform(X_temp)
+        
+        return X_temp
+
+================================================
+FILE: feature_selection/hybrid.py
+================================================
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
+from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.model_selection import cross_val_score
+from sklearn.feature_selection import RFE, RFECV
+import warnings
+
+class RecursiveFeatureElimination(BaseEstimator, TransformerMixin):
+    def __init__(self, 
+                 estimator=None,
+                 step=1,
+                 cv=3,
+                 scoring='roc_auc',
+                 min_features_to_select=1,
+                 tolerance=0.001,
+                 random_state=42):
+        
+        self.estimator = estimator
+        self.step = step
+        self.cv = cv
+        self.scoring = scoring
+        self.min_features_to_select = min_features_to_select
+        self.tolerance = tolerance
+        self.random_state = random_state
+        
+        self.selector_ = None
+        self.selected_features_ = []
+        self.elimination_history_ = []
+        
+    def fit(self, X, y):
+        if self.estimator is None:
+            if len(np.unique(y)) == 2:
+                self.estimator = RandomForestClassifier(n_estimators=50, random_state=self.random_state, n_jobs=-1)
+            else:
+                self.estimator = RandomForestRegressor(n_estimators=50, random_state=self.random_state, n_jobs=-1)
+        
+        if self.tolerance > 0:
+            self.selector_ = RFECV(
+                estimator=self.estimator,
+                step=self.step,
+                cv=self.cv,
+                scoring=self.scoring,
+                min_features_to_select=self.min_features_to_select
+            )
+        else:
+            n_features = max(self.min_features_to_select, len(X.columns) // 2)
+            self.selector_ = RFE(
+                estimator=self.estimator,
+                n_features_to_select=n_features,
+                step=self.step
+            )
+        
+        self.selector_.fit(X, y)
+        self.selected_features_ = X.columns[self.selector_.get_support()].tolist()
+        
+        if hasattr(self.selector_, 'cv_results_'):
+            self.elimination_history_ = self.selector_.cv_results_
+        
+        print(f"RFE selected {len(self.selected_features_)} features")
+        return self
+    
+    def transform(self, X):
+        return X[self.selected_features_]
+    
+    def plot_cv_results(self, figsize=(10, 6)):
+        if hasattr(self.selector_, 'grid_scores_'):
+            scores = self.scores = self.selector_.grid_scores_
+            plt.figure(figsize=figsize)
+            plt.plot(range(1, len(scores) + 1), scores, marker='o')
+            plt.xlabel('Number of Features')
+            plt.ylabel(f'Cross-Validation Score ({self.scoring})')
+            plt.title('Recursive Feature Elimination CV Results')
+            plt.grid(True, alpha=0.3)
+            plt.show()
+
+class ForwardFeatureSelection(BaseEstimator, TransformerMixin):
+    def __init__(self, 
+                    estimator=None,
+                    cv=3,
+                    scoring='roc_auc',
+                    max_features=None,
+                    tolerance=0.001,
+                    patience=5,
+                    random_state=42):
+        
+        self.estimator = estimator
+        self.cv = cv
+        self.scoring = scoring
+        self.max_features = max_features
+        self.tolerance = tolerance
+        self.patience = patience
+        self.random_state = random_state
+        
+        self.selected_features_ = []
+        self.selection_history_ = []
+        self.best_score_ = -np.inf
+        
+    def fit(self, X, y):
+        if self.estimator is None:
+            if len(np.unique(y)) == 2:
+                self.estimator = RandomForestClassifier(n_estimators=50, random_state=self.random_state, n_jobs=-1)
+            else:
+                self.estimator = RandomForestRegressor(n_estimators=50, random_state=self.random_state, n_jobs=-1)
+        
+        available_features = list(X.columns)
+        current_features = []
+        patience_counter = 0
+        
+        max_features = self.max_features or len(X.columns)
+        
+        while len(current_features) < max_features and available_features and patience_counter < self.patience:
+            best_feature = None
+            best_score = -np.inf
+            
+            for feature in available_features:
+                candidate_features = current_features + [feature]
+                
+                try:
+                    scores = cross_val_score(
+                        self.estimator, 
+                        X[candidate_features], 
+                        y, 
+                        cv=self.cv, 
+                        scoring=self.scoring
+                    )
+                    score = np.mean(scores)
+                    
+                    if score > best_score:
+                        best_score = score
+                        best_feature = feature
+                        
+                except Exception as e:
+                    warnings.warn(f"Error evaluating feature {feature}: {e}")
+                    continue
+            
+            if best_feature and (best_score - self.best_score_) > self.tolerance:
+                current_features.append(best_feature)
+                available_features.remove(best_feature)
+                self.best_score_ = best_score
+                patience_counter = 0
+                
+                self.selection_history_.append({
+                    'feature': best_feature,
+                    'score': best_score,
+                    'n_features': len(current_features)
+                })
+                
+                print(f"Added feature {best_feature}, score: {best_score:.4f}")
+            else:
+                patience_counter += 1
+                if best_feature:
+                    print(f"Feature {best_feature} did not improve score enough (improvement: {best_score - self.best_score_:.4f})")
+        
+        self.selected_features_ = current_features
+        print(f"Forward selection completed: {len(self.selected_features_)} features selected")
+        return self
+    
+    def transform(self, X):
+        return X[self.selected_features_]
+
+class BackwardFeatureElimination(BaseEstimator, TransformerMixin):
+    def __init__(self, 
+                    estimator=None,
+                    cv=3,
+                    scoring='roc_auc',
+                    min_features=1,
+                    tolerance=0.001,
+                    patience=5,
+                    random_state=42):
+        
+        self.estimator = estimator
+        self.cv = cv
+        self.scoring = scoring
+        self.min_features = min_features
+        self.tolerance = tolerance
+        self.patience = patience
+        self.random_state = random_state
+        
+        self.selected_features_ = []
+        self.elimination_history_ = []
+        self.best_score_ = -np.inf
+        
+    def fit(self, X, y):
+        if self.estimator is None:
+            if len(np.unique(y)) == 2:
+                self.estimator = RandomForestClassifier(n_estimators=50, random_state=self.random_state, n_jobs=-1)
+            else:
+                self.estimator = RandomForestRegressor(n_estimators=50, random_state=self.random_state, n_jobs=-1)
+        
+        current_features = list(X.columns)
+        
+        initial_scores = cross_val_score(self.estimator, X[current_features], y, cv=self.cv, scoring=self.scoring)
+        self.best_score_ = np.mean(initial_scores)
+        
+        patience_counter = 0
+        
+        while len(current_features) > self.min_features and patience_counter < self.patience:
+            worst_feature = None
+            best_score_after_removal = -np.inf
+            
+            for feature in current_features:
+                candidate_features = [f for f in current_features if f != feature]
+                
+                try:
+                    scores = cross_val_score(
+                        self.estimator, 
+                        X[candidate_features], 
+                        y, 
+                        cv=self.cv, 
+                        scoring=self.scoring
+                    )
+                    score = np.mean(scores)
+                    
+                    if score > best_score_after_removal:
+                        best_score_after_removal = score
+                        worst_feature = feature
+                        
+                except Exception as e:
+                    warnings.warn(f"Error evaluating removal of feature {feature}: {e}")
+                    continue
+            
+            score_drop = self.best_score_ - best_score_after_removal
+            
+            if worst_feature and score_drop <= self.tolerance:
+                current_features.remove(worst_feature)
+                self.best_score_ = best_score_after_removal
+                patience_counter = 0
+                
+                self.elimination_history_.append({
+                    'removed_feature': worst_feature,
+                    'score_after_removal': best_score_after_removal,
+                    'score_drop': score_drop,
+                    'n_features': len(current_features)
+                })
+                
+                print(f"Removed feature {worst_feature}, score: {best_score_after_removal:.4f}, drop: {score_drop:.4f}")
+            else:
+                patience_counter += 1
+                if worst_feature:
+                    print(f"Stopping: removing {worst_feature} would drop score by {score_drop:.4f}")
+        
+        self.selected_features_ = current_features
+        print(f"Backward elimination completed: {len(self.selected_features_)} features selected")
+        return self
+    
+    def transform(self, X):
+        return X[self.selected_features_]
+
+class StepwiseSelection(BaseEstimator, TransformerMixin):
+    def __init__(self, 
+                    estimator=None,
+                    cv=3,
+                    scoring='roc_auc',
+                    forward_threshold=0.01,
+                    backward_threshold=0.01,
+                    max_iter=100,
+                    random_state=42):
+        
+        self.estimator = estimator
+        self.cv = cv
+        self.scoring = scoring
+        self.forward_threshold = forward_threshold
+        self.backward_threshold = backward_threshold
+        self.max_iter = max_iter
+        self.random_state = random_state
+        
+        self.selected_features_ = []
+        self.stepwise_history_ = []
+        
+    def fit(self, X, y):
+        if self.estimator is None:
+            if len(np.unique(y)) == 2:
+                self.estimator = RandomForestClassifier(n_estimators=50, random_state=self.random_state, n_jobs=-1)
+            else:
+                self.estimator = RandomForestRegressor(n_estimators=50, random_state=self.random_state, n_jobs=-1)
+        
+        available_features = list(X.columns)
+        current_features = []
+        
+        for iteration in range(self.max_iter):
+            changed = False
+            
+            if available_features:
+                best_forward_feature = None
+                best_forward_score = -np.inf
+                
+                current_score = self._get_score(X[current_features], y) if current_features else -np.inf
+                
+                for feature in available_features:
+                    candidate_features = current_features + [feature]
+                    score = self._get_score(X[candidate_features], y)
+                    
+                    if score > best_forward_score:
+                        best_forward_score = score
+                        best_forward_feature = feature
+                
+                if best_forward_feature and (best_forward_score - current_score) > self.forward_threshold:
+                    current_features.append(best_forward_feature)
+                    available_features.remove(best_forward_feature)
+                    changed = True
+                    
+                    self.stepwise_history_.append({
+                        'step': 'forward',
+                        'feature': best_forward_feature,
+                        'score': best_forward_score,
+                        'iteration': iteration
+                    })
+            
+            if len(current_features) > 1:
+                worst_backward_feature = None
+                best_backward_score = -np.inf
+                
+                current_score = self._get_score(X[current_features], y)
+                
+                for feature in current_features:
+                    candidate_features = [f for f in current_features if f != feature]
+                    score = self._get_score(X[candidate_features], y)
+                    
+                    if score > best_backward_score:
+                        best_backward_score = score
+                        worst_backward_feature = feature
+                
+                score_drop = current_score - best_backward_score
+                
+                if worst_backward_feature and score_drop <= self.backward_threshold:
+                    current_features.remove(worst_backward_feature)
+                    available_features.append(worst_backward_feature)
+                    changed = True
+                    
+                    self.stepwise_history_.append({
+                        'step': 'backward',
+                        'feature': worst_backward_feature,
+                        'score': best_backward_score,
+                        'iteration': iteration
+                    })
+            
+            if not changed:
+                print(f"Stepwise selection converged at iteration {iteration}")
+                break
+        
+        self.selected_features_ = current_features
+        print(f"Stepwise selection completed: {len(self.selected_features_)} features selected")
+        return self
+    
+    def transform(self, X):
+        return X[self.selected_features_]
+    
+    def _get_score(self, X, y):
+        if len(X.columns) == 0:
+            return -np.inf
+        try:
+            scores = cross_val_score(self.estimator, X, y, cv=self.cv, scoring=self.scoring)
+            return np.mean(scores)
+        except:
+            return -np.inf
+

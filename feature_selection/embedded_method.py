@@ -165,7 +165,7 @@ class LinearSelector(BaseEstimator, TransformerMixin):
             index=X.index
         )
     
-    def get_selected_features(self):
+    def get_selected_features(self, X):
         return X.columns[self.selector_.get_support()].tolist()
 
 class EnsembleSelector(BaseEstimator, TransformerMixin):
